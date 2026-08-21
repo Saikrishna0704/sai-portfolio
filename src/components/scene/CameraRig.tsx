@@ -8,6 +8,8 @@ import { MOON_LABEL_REACH, planets, systemRadius } from "@/scene/layout";
 import { planetAngleAt } from "@/scene/motion";
 import type { Selection } from "@/state/selection";
 
+import { markSceneArrived } from "./arrivalState";
+
 /** Viewing elevation above the orbital plane, held constant at every level so
  *  the system always reads as a disc seen from the same angle. */
 const ELEVATION = MathUtils.degToRad(32);
@@ -35,12 +37,45 @@ const PROJECT_FRAME_RADIUS = MOON_LABEL_REACH + 0.8;
 /** Damping rate. Roughly a second to settle: brief, but not a cut. */
 const LAMBDA = 2.8;
 /**
- * How far out the camera starts on first load, as a multiple of its resting
- * distance. The system then settles into place instead of appearing already
- * arrived, which is the difference between the page opening and the page
- * simply being there.
+ * How far out the camera starts when the opening is playing, as a multiple of
+ * its resting distance.
+ *
+ * Far enough that closing the gap is a journey rather than a nudge: the
+ * starfield sits at a fixed radius, so covering this much ground drags the
+ * stars past in parallax and the system grows from a speck. Held here in the
+ * dark until the opening lifts, so none of it is spent unseen.
  */
+const CINEMATIC_PULLBACK = 4.6;
+/** The same idea at ordinary scale, for a load with no opening in front of it:
+ *  enough that the system settles rather than appearing already arrived. */
 const ARRIVAL_PULLBACK = 1.85;
+/**
+ * Ceiling on that starting distance, in world units.
+ *
+ * The multiplier alone does not survive a change of aspect ratio: framing the
+ * whole system on a narrow phone already puts the camera around 110 units out,
+ * and multiplying *that* would start the shot beyond both the starfield shell
+ * and the far plane. The clamp keeps the approach inside the stars, at the cost
+ * of a shorter dolly on portrait screens — which is why the arrival also
+ * changes elevation, since that reads at any distance.
+ */
+const ARRIVAL_MAX_DISTANCE = 130;
+/** Elevation the approach begins from: nearly edge-on, so the system resolves
+ *  from a line into a disc as the camera climbs. */
+const ARRIVAL_ELEVATION = MathUtils.degToRad(4);
+/**
+ * Damping for the cinematic approach. Much slower than ordinary navigation: it
+ * should read as coasting in under momentum, not as a camera move.
+ */
+const CINEMATIC_LAMBDA = 1.1;
+/**
+ * Within this fraction of the resting distance, the arrival is over.
+ *
+ * Deliberately loose. Exponential damping has a long, flat tail, and holding on
+ * for the last couple of percent buys seconds of movement too small to see
+ * while the labels are still waiting on it.
+ */
+const ARRIVAL_SETTLED = 0.06;
 
 /** Wraps an angle into [-PI, PI] so damping always takes the short way round. */
 function wrapAngle(angle: number): number {
@@ -70,6 +105,8 @@ function fitDistance(
 interface CameraRigProps {
   selection: Selection;
   reducedMotion: boolean;
+  /** False while the opening still covers the screen. */
+  mayArrive: boolean;
 }
 
 /**
@@ -89,14 +126,23 @@ interface CameraRigProps {
  * mid-flight simply re-targets. Repeated interaction cannot corrupt state
  * because there is no state to corrupt beyond the camera's own position.
  */
-export function CameraRig({ selection, reducedMotion }: CameraRigProps) {
+export function CameraRig({
+  selection,
+  reducedMotion,
+  mayArrive,
+}: CameraRigProps) {
   const camera = useThree((state) => state.camera);
 
   const focus = useRef(new Vector3());
   const desiredFocus = useRef(new Vector3());
   const azimuth = useRef(OVERVIEW_AZIMUTH);
   const distance = useRef(0);
+  const elevation = useRef(ELEVATION);
   const initialised = useRef(false);
+  const arriving = useRef(true);
+  // Decided once, at the first frame: the long approach is the opening's, not
+  // something to sit through on every reload.
+  const cinematic = useRef(false);
 
   useFrame((state, delta) => {
     if (!(camera instanceof PerspectiveCamera)) return;
@@ -151,27 +197,66 @@ export function CameraRig({ selection, reducedMotion }: CameraRigProps) {
 
     if (!initialised.current) {
       initialised.current = true;
-      // Aim correctly straight away, so the arrival is a approach rather than
+      arriving.current = !reducedMotion;
+      // mayArrive is false only while the opening covers the screen, so this is
+      // exactly the case where the approach has an audience waiting for it.
+      cinematic.current = !reducedMotion && !mayArrive;
+
+      // Aim correctly straight away, so the arrival is an approach rather than
       // a swing, but start further out and let the damping close the distance.
       focus.current.copy(target);
       azimuth.current = desiredAzimuth;
       distance.current = reducedMotion
         ? desiredDistance
-        : desiredDistance * ARRIVAL_PULLBACK;
+        : Math.max(
+            desiredDistance,
+            Math.min(
+              desiredDistance *
+                (cinematic.current ? CINEMATIC_PULLBACK : ARRIVAL_PULLBACK),
+              ARRIVAL_MAX_DISTANCE,
+            ),
+          );
+      elevation.current = cinematic.current ? ARRIVAL_ELEVATION : ELEVATION;
+
+      // Nothing worth hiding on an ordinary load, so the DOM layer is told the
+      // system is in place straight away.
+      if (!cinematic.current) markSceneArrived();
+    } else if (arriving.current && !mayArrive) {
+      // Hold out in the dark. Aim keeps tracking so the moment the veil lifts
+      // the camera is already pointed at the right thing, but the distance
+      // does not close where nobody can watch it.
+      focus.current.copy(target);
+      azimuth.current = desiredAzimuth;
     } else {
       // Frame-rate independent, so a transition takes the same time at 30fps
       // as at 120. Reduced motion snaps instead of gliding.
-      const t = reducedMotion ? 1 : 1 - Math.exp(-LAMBDA * delta);
+      const lambda =
+        arriving.current && cinematic.current ? CINEMATIC_LAMBDA : LAMBDA;
+      const t = reducedMotion ? 1 : 1 - Math.exp(-lambda * delta);
 
       focus.current.lerp(target, t);
       distance.current += (desiredDistance - distance.current) * t;
       azimuth.current += wrapAngle(desiredAzimuth - azimuth.current) * t;
+      elevation.current += (ELEVATION - elevation.current) * t;
+
+      if (
+        arriving.current &&
+        Math.abs(distance.current - desiredDistance) <
+          desiredDistance * ARRIVAL_SETTLED
+      ) {
+        // Hand back to the ordinary damping, so selecting a domain from here
+        // moves at navigation speed rather than at arrival speed.
+        arriving.current = false;
+        markSceneArrived();
+      }
     }
 
-    const horizontalReach = Math.cos(ELEVATION) * distance.current;
+    // Elevation is the resting angle for everything except the first approach,
+    // which climbs into it.
+    const horizontalReach = Math.cos(elevation.current) * distance.current;
     camera.position.set(
       focus.current.x + Math.cos(azimuth.current) * horizontalReach,
-      focus.current.y + Math.sin(ELEVATION) * distance.current,
+      focus.current.y + Math.sin(elevation.current) * distance.current,
       focus.current.z + Math.sin(azimuth.current) * horizontalReach,
     );
     camera.lookAt(focus.current);

@@ -3,6 +3,7 @@
 import { Canvas } from "@react-three/fiber";
 import { useCallback, useEffect, useState } from "react";
 
+import { useSceneMayArrive } from "@/components/opening/openingState";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { planets } from "@/scene/layout";
 import type { Hover, Selection } from "@/state/selection";
@@ -45,6 +46,7 @@ export default function SceneCanvas({
   onHover,
 }: SceneCanvasProps) {
   const reducedMotion = usePrefersReducedMotion();
+  const mayArrive = useSceneMayArrive();
   const [pointerOverBody, setPointerOverBody] = useState(false);
   // The scene fades in once it has actually drawn, so the system emerges
   // instead of popping into an empty canvas.
@@ -86,15 +88,18 @@ export default function SceneCanvas({
       onPointerMissed={() => onSelect({ kind: "overview" })}
     >
       <FirstFrameSignal onFirstFrame={() => setHasDrawn(true)} />
-      <CameraRig selection={selection} reducedMotion={reducedMotion} />
+      <CameraRig
+        selection={selection}
+        reducedMotion={reducedMotion}
+        mayArrive={mayArrive}
+      />
 
-      {/* Low ambient so night sides read as shadowed, not as holes. */}
+      {/* Low ambient so night sides read as shadowed, not as holes. The star's
+          own light lives with the star, so it can come up as the star does. */}
       <ambientLight intensity={0.22} />
-      {/* The star lights the system from the centre it occupies. */}
-      <pointLight position={[0, 0, 0]} intensity={520} distance={0} decay={2} />
 
       <Starfield reducedMotion={reducedMotion} />
-      <CentralStar />
+      <CentralStar reducedMotion={reducedMotion} mayArrive={mayArrive} />
 
       {planets.map((planet) => (
         <OrbitGuide

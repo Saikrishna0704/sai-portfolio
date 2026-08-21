@@ -39,6 +39,43 @@ function getServerSnapshot(): boolean {
   return true;
 }
 
+let revealing = false;
+const revealListeners = new Set<() => void>();
+
+function subscribeReveal(onStoreChange: () => void): () => void {
+  revealListeners.add(onStoreChange);
+  return () => {
+    revealListeners.delete(onStoreChange);
+  };
+}
+
+/**
+ * Announces that the veil is lifting, so the scene can begin its arrival at
+ * the moment it becomes visible rather than behind the overlay.
+ */
+export function markOpeningRevealing(): void {
+  revealing = true;
+  revealListeners.forEach((listener) => listener());
+}
+
+/**
+ * Whether the scene is allowed to fly in yet.
+ *
+ * False only while the opening is still covering the screen. When there is no
+ * opening at all, because motion is reduced or it has already played, the
+ * scene simply arrives as usual.
+ */
+export function useSceneMayArrive(): boolean {
+  const shouldPlay = useShouldPlayOpening();
+  const hasRevealed = useSyncExternalStore(
+    subscribeReveal,
+    () => revealing,
+    () => false,
+  );
+
+  return !shouldPlay || hasRevealed;
+}
+
 /** Records that the opening has run, which unmounts it. */
 export function markOpeningPlayed(): void {
   played = true;

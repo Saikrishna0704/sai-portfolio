@@ -5,7 +5,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { nameRenderings } from "@/data/name-renderings";
 import { portfolioData } from "@/data/portfolio-data";
 
-import { markOpeningPlayed, useShouldPlayOpening } from "./openingState";
+import {
+  markOpeningPlayed,
+  markOpeningRevealing,
+  useShouldPlayOpening,
+} from "./openingState";
 
 import styles from "./OpeningSequence.module.css";
 
@@ -56,6 +60,8 @@ export function OpeningSequence() {
   /** Fly the name into the header, then clear. */
   const morph = useCallback(() => {
     setPhase("morphing");
+    // The scene has been holding out in the dark waiting for this.
+    markOpeningRevealing();
 
     const node = nameRef.current;
     const brand = document.getElementById(BRAND_ID);

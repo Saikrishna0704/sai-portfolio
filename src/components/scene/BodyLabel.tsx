@@ -2,6 +2,8 @@
 
 import { Html } from "@react-three/drei";
 
+import { useSceneArrived } from "./arrivalState";
+
 import styles from "./BodyLabel.module.css";
 
 interface BodyLabelProps {
@@ -20,6 +22,12 @@ interface BodyLabelProps {
  *
  * The whole scene layer is `aria-hidden`, so these are the visual echo of the
  * domain and project names; Quick View carries them for assistive technology.
+ *
+ * They wait out the opening approach. Being a fixed pixel size is what keeps
+ * them legible once the system is framed, but it also means that with the
+ * camera still far out they stay full size over bodies the size of a full stop
+ * and collect in a heap at the centre of the screen. They belong to the system
+ * as it is meant to be seen, so they arrive with it.
  */
 export function BodyLabel({
   text,
@@ -27,6 +35,8 @@ export function BodyLabel({
   variant,
   dimmed,
 }: BodyLabelProps) {
+  const arrived = useSceneArrived();
+
   return (
     <Html
       position={position}
@@ -40,6 +50,7 @@ export function BodyLabel({
         className={[
           variant === "domain" ? styles.domain : styles.project,
           dimmed ? styles.dimmed : "",
+          arrived ? "" : styles.waiting,
         ]
           .filter(Boolean)
           .join(" ")}

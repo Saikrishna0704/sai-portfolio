@@ -35,6 +35,15 @@
      centred on its anchor, so extra lines grow back towards the moon. */
   width: 10rem;
   text-align: center;
+  transition: opacity 200ms var(--ease-out);
+}
+
+/* Held back until the camera has finished its opening approach: full-size text
+   over bodies still a few pixels wide is a heap at the centre of the screen,
+   not a set of labels. Fades rather than pops when the class comes off, using
+   the transition each variant already declares. */
+.waiting {
+  opacity: 0;
 }
 
 /* Labels are fixed-size DOM while the system scales down with the viewport, so
