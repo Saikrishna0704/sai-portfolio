@@ -1,11 +1,12 @@
 "use client";
 
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Color, type Group, type Mesh } from "three";
 
 import { MOON_COLOR, type PlanetLayout } from "@/scene/layout";
 import { PLANET_SPIN_SPEED, planetAngleAt } from "@/scene/motion";
+import { createPlanetTexture } from "@/scene/planetTexture";
 import type { Hover, Selection } from "@/state/selection";
 
 import { BodyLabel } from "./BodyLabel";
@@ -24,6 +25,8 @@ const MOON_TARGET_RADIUS = 0.8;
 
 /** How far a receding body's colour is pulled down when another is in focus. */
 const DIM_FACTOR = 0.3;
+/** The same amount as a neutral grey, for multiplying a mapped surface down. */
+const DIM_TINT = "#4d4d4d";
 
 interface DomainPlanetProps {
   planet: PlanetLayout;
@@ -62,15 +65,18 @@ export function DomainPlanet({
   const isActive = activeDomainId === planet.domainId;
   const isDimmed = activeDomainId !== null && !isActive;
 
-  // Recede by darkening rather than by going transparent: a see-through planet
-  // shows the starfield through itself and reads as broken, not as background.
-  const planetColor = useMemo(
-    () =>
-      isDimmed
-        ? new Color(planet.color).multiplyScalar(DIM_FACTOR)
-        : new Color(planet.color),
-    [planet.color, isDimmed],
-  );
+  // Seeded from the domain id so each planet keeps the same face across
+  // reloads, and two domains never share one.
+  const surface = useMemo(() => {
+    const seed = [...planet.domainId].reduce(
+      (total, character) => total * 31 + character.charCodeAt(0),
+      7,
+    );
+    return createPlanetTexture(planet.color, seed);
+  }, [planet.domainId, planet.color]);
+
+  useEffect(() => () => surface?.dispose(), [surface]);
+
   const moonColor = useMemo(
     () =>
       isDimmed
@@ -94,10 +100,9 @@ export function DomainPlanet({
       Math.sin(angle) * planet.orbitRadius,
     );
 
-    // Currently imperceptible: an untextured sphere lit from a fixed point
-    // looks identical at every rotation, because the terminator does not move.
-    // The spin becomes visible once planet surfaces gain variation — deferred
-    // to the Phase 11 materials pass rather than widening a motion phase.
+    // Legible now that surfaces carry longitudinal mottling. On the untextured
+    // spheres this shipped with, the terminator never moved and the spin was
+    // invisible.
     if (bodyRef.current) {
       bodyRef.current.rotation.y = elapsed * PLANET_SPIN_SPEED;
     }
@@ -118,10 +123,14 @@ export function DomainPlanet({
       <mesh ref={bodyRef}>
         <sphereGeometry args={[planet.radius, 32, 32]} />
         <meshStandardMaterial
-          color={planetColor}
+          map={surface}
+          // The map already carries the domain colour, and `color` multiplies
+          // it. So white leaves the surface alone, and receding is a neutral
+          // multiply down rather than a second tint, which would shift the hue.
+          color={isDimmed ? DIM_TINT : "#ffffff"}
           roughness={0.85}
           metalness={0}
-          emissive={planetColor}
+          emissive={planet.color}
           emissiveIntensity={isActive ? 0.32 : 0}
         />
       </mesh>

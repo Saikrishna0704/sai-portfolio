@@ -5,22 +5,11 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { STARFIELD_DRIFT_SPEED } from "@/scene/motion";
+import { mulberry32 } from "@/scene/random";
 
 const STAR_COUNT = 1400;
 const INNER_RADIUS = 90;
 const OUTER_RADIUS = 150;
-
-/** Deterministic PRNG so the sky is identical on every mount. */
-function mulberry32(seed: number) {
-  let a = seed;
-  return () => {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 /**
  * Background sky: a single points cloud on a distant shell.

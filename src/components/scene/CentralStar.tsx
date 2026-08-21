@@ -6,8 +6,15 @@ import { AdditiveBlending, CanvasTexture, SRGBColorSpace } from "three";
 import { STAR_COLOR, WORLD } from "@/scene/layout";
 
 const GLOW_TEXTURE_SIZE = 256;
-/** Halo extent as a multiple of the star's radius. */
-const GLOW_SCALE = 7;
+/**
+ * Halo extent as a multiple of the star's radius.
+ *
+ * Kept tighter than looks best at the overview on purpose. The halo is fixed
+ * in world units, so it grows on screen as the camera approaches, and focusing
+ * an inner domain brought the camera close enough that a wider glow washed out
+ * the corner of the frame.
+ */
+const GLOW_SCALE = 5.4;
 
 /**
  * A soft radial falloff, drawn once to a canvas.
