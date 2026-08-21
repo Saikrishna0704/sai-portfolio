@@ -25,6 +25,12 @@
   gap: 0.5rem;
 }
 
+/* Pull the icon row back into line with the text above it: the 44px targets
+   carry padding the type does not. */
+.identity nav {
+  margin: 0.15rem 0 0 -0.75rem;
+}
+
 .eyebrow {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 0.75rem;

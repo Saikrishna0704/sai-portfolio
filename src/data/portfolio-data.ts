@@ -34,6 +34,13 @@ export interface ExperienceEntry {
   summary: string;
 }
 
+export interface EducationEntry {
+  degree: string;
+  institution: string;
+  // No dates: none were supplied, and a graduation year is not something to
+  // guess at on someone's behalf. Add `start`/`end` here when they are known.
+}
+
 export interface ArchivedObject {
   id: string;
   title: string;
@@ -63,6 +70,7 @@ export interface PortfolioData {
   domains: Domain[];
   skills: Skill[];
   experience: ExperienceEntry[];
+  education: EducationEntry[];
   archived: ArchivedObject[];
 }
 
@@ -151,6 +159,15 @@ export const portfolioData: PortfolioData = {
       start: "2025-03",
       end: "2026-01",
       summary: "Contributed to research on multimodal LLM and RAG pipelines for satellite imagery interpretation, published at HCII 2026.",
+    },
+  ],
+
+  education: [
+    {
+      // Kept as supplied — "Masters in Data Science" rather than MS or MPS,
+      // since Buffalo offers both and the exact credential was not specified.
+      degree: "Masters in Data Science",
+      institution: "University at Buffalo",
     },
   ],
 

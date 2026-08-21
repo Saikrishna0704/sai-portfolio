@@ -29,6 +29,30 @@
   pointer-events: auto;
 }
 
+.masthead {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* Pull the icon row back into line with the text above it: the 44px targets
+   carry padding the type does not. */
+.masthead nav {
+  margin: 0.35rem 0 0 -0.75rem;
+}
+
+.name {
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+}
+
+.tagline {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
 .section {
   display: flex;
   flex-direction: column;
@@ -102,6 +126,89 @@
 
 .projectSummary {
   font-size: 0.9375rem;
+  color: var(--text-faint);
+}
+
+.entries {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.entryHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+}
+
+.entryTitle {
+  font-size: 1.0625rem;
+}
+
+.entryMeta {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+.entryInstitution {
+  font-size: 0.9375rem;
+  color: var(--accent);
+}
+
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.skill {
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/* Earlier work sits deliberately quieter than the rest: findable, not
+   competing with current focus. */
+.archived {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.archivedTitle {
+  align-self: flex-start;
+  font-size: 0.9375rem;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 0.25em;
+  transition: color 160ms var(--ease-out);
+}
+
+.archivedTitle:hover {
+  color: var(--text);
+}
+
+.archivedMeta {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+
+.archivedSummary {
+  font-size: 0.875rem;
   color: var(--text-faint);
 }
 
