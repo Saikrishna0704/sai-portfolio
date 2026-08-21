@@ -27,11 +27,14 @@ export interface Skill {
 }
 
 export interface ExperienceEntry {
+  id: string;
   role: string;
   institution: string;
   start: string; // YYYY-MM
   end: string | null; // null = ongoing
   summary: string;
+  /** Project ids this role produced or contributed to. */
+  relatedProjects: string[];
 }
 
 export interface EducationEntry {
@@ -159,11 +162,15 @@ export const portfolioData: PortfolioData = {
 
   experience: [
     {
+      id: "ub-gra",
       role: "Graduate Research Assistant",
       institution: "University at Buffalo",
       start: "2025-03",
       end: "2026-01",
       summary: "Contributed to research on multimodal LLM and RAG pipelines for satellite imagery interpretation, published at HCII 2026.",
+      // The role and the paper are the same piece of work: both describe the
+      // multimodal LLM and RAG pipeline published at HCII 2026.
+      relatedProjects: ["synthetic-reflections"],
     },
   ],
 
