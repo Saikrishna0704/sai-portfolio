@@ -1,0 +1,125 @@
+.panel {
+  /* The shell is transparent to the pointer so the scene can be clicked; this
+     is a real surface and switches itself back on. */
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 24rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--void) 86%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.title {
+  font-size: 1.125rem;
+}
+
+.description {
+  font-size: 0.9375rem;
+  color: var(--text-muted);
+}
+
+.projects {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.project {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.projectName {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.2rem 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  text-align: left;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 180ms var(--ease-out);
+}
+
+.projectName:hover {
+  color: var(--text);
+}
+
+.projectName[aria-pressed="true"] {
+  color: var(--accent);
+}
+
+.summary {
+  font-size: 0.875rem;
+  color: var(--text-faint);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.tag {
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+
+.link {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+
+.link:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.returns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.15rem;
+}
+
+.back {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  cursor: pointer;
+  transition: color 180ms var(--ease-out);
+}
+
+.back:hover {
+  color: var(--text);
+}

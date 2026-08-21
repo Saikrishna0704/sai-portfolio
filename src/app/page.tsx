@@ -1,5 +1,5 @@
 import { SocialLinks } from "@/components/contact/SocialLinks";
-import { DomainNav } from "@/components/overview/DomainNav";
+import { SelectionPanel } from "@/components/overview/SelectionPanel";
 import { portfolioData } from "@/data/portfolio-data";
 
 import styles from "./page.module.css";
@@ -9,16 +9,18 @@ export default function ExplorePage() {
 
   return (
     <section className={styles.overview}>
-      <div className={styles.identity}>
-        <p className={styles.eyebrow}>{person.tagline}</p>
-        <h1 className={styles.name}>{person.name}</h1>
-        {/* PROJECT.md §2.6: contact and important external links must be
-            reachable without depending on the 3D scene — so they sit here as
-            well as in the conventional view, not one click away. */}
-        <SocialLinks links={person.links} />
-      </div>
+      {/*
+        The name and domain navigation live in the header, and the star is the
+        identity in the scene. Repeating either here is what made this corner
+        cluttered, so the page keeps only a heading for document structure.
+      */}
+      <h1 className="sr-only">
+        {person.name}. {person.tagline}.
+      </h1>
 
-      <DomainNav />
+      <SelectionPanel />
+
+      <SocialLinks links={person.links} />
     </section>
   );
 }

@@ -28,12 +28,6 @@ export const WORLD = {
    * projects widen their own ring beyond this.
    */
   moonOrbitRadius: 2,
-  /** Minor bodies: smaller than a project moon, because they are minor. */
-  asteroidRadius: 0.13,
-  /** Clearance between the outermost domain and the asteroid belt. */
-  beltGap: 2.6,
-  /** How far asteroids scatter either side of the belt's mean radius. */
-  beltSpread: 1.1,
 } as const;
 
 /**
@@ -109,36 +103,13 @@ export interface PlanetLayout {
   moons: MoonLayout[];
 }
 
-/**
- * A minor body out past the domains: a side project or archived work.
- *
- * PROJECT.md §3 reserves asteroids for "smaller prototypes, experiments, or
- * archived work". Keeping them in an outer belt is the placement doing the
- * talking: present and reachable, but plainly at the edge of the system rather
- * than competing with the domains.
- */
-export interface AsteroidLayout {
-  /** Project id or archived object id, so content can be looked up by it. */
-  id: string;
-  position: [number, number, number];
-  radius: number;
-}
-
 export interface SystemLayout {
   planets: PlanetLayout[];
-  asteroids: AsteroidLayout[];
   /**
    * Radius the camera must frame to keep every body on screen, including the
-   * outermost moon ring and the asteroid belt.
+   * outermost moon ring.
    */
   radius: number;
-  /**
-   * The same, ignoring the belt. Framing the belt costs roughly a quarter of
-   * every body's on-screen size, which is not a trade worth making on a screen
-   * where the bodies are already small (PROJECT.md §12: mobile may show fewer
-   * bodies).
-   */
-  coreRadius: number;
 }
 
 function onOrbit(radius: number, angle: number): [number, number, number] {
@@ -178,38 +149,7 @@ function moonRingRadius(moonCount: number): number {
  * Pure and total: any number of domains, each with any number of projects,
  * produces a laid-out system with no per-domain configuration.
  */
-/**
- * Scatters minor bodies around an outer belt.
- *
- * Golden-angle spacing again, plus a deterministic wobble in radius and
- * elevation so the belt reads as a scattered field rather than a ring of
- * evenly spaced beads. Deterministic because the layout must be identical on
- * every render; a random scatter would move the bodies under the camera.
- */
-function buildAsteroids(ids: string[], innerEdge: number): AsteroidLayout[] {
-  return ids.map((id, index) => {
-    const angle = BASE_ANGLE + (index + 0.5) * GOLDEN_ANGLE;
-    // Two incommensurate frequencies, so the wobble never repeats over the
-    // handful of bodies a belt actually holds.
-    const radial = Math.sin(index * 2.399) * WORLD.beltSpread;
-    const elevation = Math.cos(index * 1.618) * WORLD.beltSpread * 0.35;
-
-    return {
-      id,
-      position: [
-        Math.cos(angle) * (innerEdge + radial),
-        elevation,
-        Math.sin(angle) * (innerEdge + radial),
-      ],
-      radius: WORLD.asteroidRadius,
-    };
-  });
-}
-
-export function buildSystem(
-  domains: Domain[],
-  minorBodyIds: string[] = [],
-): SystemLayout {
+export function buildSystem(domains: Domain[]): SystemLayout {
   let previousOrbit = 0;
   let previousRing = 0;
 
@@ -278,41 +218,17 @@ export function buildSystem(
 
   // Annotated: WORLD is `as const`, so an unannotated seed narrows the
   // accumulator to the literal 1.5.
-  const planetsRadius = planets.reduce<number>(
+  const radius = planets.reduce<number>(
     (widest, planet) =>
       Math.max(widest, planet.orbitRadius + planet.moonOrbitRadius + planet.radius),
     WORLD.starRadius,
   );
 
-  const asteroids = buildAsteroids(
-    minorBodyIds,
-    planetsRadius + WORLD.beltGap + WORLD.beltSpread,
-  );
 
-  const radius = asteroids.reduce<number>(
-    (widest, asteroid) =>
-      Math.max(
-        widest,
-        Math.hypot(asteroid.position[0], asteroid.position[2]) + asteroid.radius,
-      ),
-    planetsRadius,
-  );
-
-  return { planets, asteroids, radius, coreRadius: planetsRadius };
+  return { planets, radius };
 }
 
-/**
- * Side projects and archived work, in that order: built for their own sake
- * first, then the older material furthest out.
- */
-const minorBodyIds = [
-  ...portfolioData.funProjects.map((project) => project.id),
-  ...portfolioData.archived.map((item) => item.id),
-];
-
-const system = buildSystem(portfolioData.domains, minorBodyIds);
+const system = buildSystem(portfolioData.domains);
 
 export const planets = system.planets;
-export const asteroids = system.asteroids;
 export const systemRadius = system.radius;
-export const coreRadius = system.coreRadius;

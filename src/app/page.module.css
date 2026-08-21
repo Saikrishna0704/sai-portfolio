@@ -1,52 +1,29 @@
 /* Overview shell.
-   The system occupies the centre of the viewport, so the identity block and
-   navigation stay out of its way: anchored bottom-left, sized down to a
-   caption rather than a full-bleed hero.
+   The system owns the viewport. Nothing sits over it until something is
+   selected, and the only permanent surface is the contact row, tucked into the
+   bottom corner.
 
-   The section itself is transparent to the pointer — it covers a large area of
-   otherwise empty space, and if it swallowed clicks the bodies behind it could
-   never be selected. Each real surface switches itself back on. */
+   The section is transparent to the pointer because it covers a large area of
+   empty space; each real surface switches itself back on. */
 .overview {
   flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   justify-content: flex-end;
   gap: 1.25rem;
-  padding: 3rem var(--gutter);
-  max-width: var(--measure);
+  padding: 2rem var(--gutter);
   pointer-events: none;
 }
 
-.identity {
-  pointer-events: auto;
-  align-self: flex-start;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-/* Pull the icon row back into line with the text above it: the 44px targets
-   carry padding the type does not. */
-.identity nav {
-  margin: 0.15rem 0 0 -0.75rem;
-}
-
-.eyebrow {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.75rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-.name {
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
-  /* Orbit guides pass behind this text; the shadow keeps it clean. */
-  text-shadow: 0 2px 12px rgba(4, 6, 11, 0.85);
+/* Pull the icon row back into line with the panel edge: the 44px targets carry
+   padding that a border does not. */
+.overview nav {
+  margin-left: -0.75rem;
 }
 
 @media (min-width: 48rem) {
   .overview {
-    padding: 4rem var(--gutter);
+    padding: 2.5rem var(--gutter);
   }
 }

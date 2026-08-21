@@ -19,13 +19,7 @@ import {
 export type Selection =
   | { kind: "overview" }
   | { kind: "domain"; domainId: string }
-  | { kind: "project"; domainId: string; projectId: string }
-  /**
-   * A minor body out in the belt: a side project or archived work. Its own
-   * variant rather than a project with a null domain, so none of the
-   * domain-and-project logic has to grow a special case.
-   */
-  | { kind: "asteroid"; asteroidId: string };
+  | { kind: "project"; domainId: string; projectId: string };
 
 /** What the pointer is currently over, if anything. */
 export interface Hover {
@@ -81,12 +75,11 @@ export function SelectionProvider({ children }: { children: ReactNode }) {
   }, [goUp]);
 
   const value = useMemo<SelectionContextValue>(() => {
-    // An asteroid belongs to no domain, so focusing one leaves every domain
-    // unemphasised rather than picking an arbitrary winner.
+    // Hover only previews while nothing is selected; a selection wins.
     const activeDomainId =
-      selection.kind === "domain" || selection.kind === "project"
-        ? selection.domainId
-        : (hover?.domainId ?? null);
+      selection.kind === "overview"
+        ? (hover?.domainId ?? null)
+        : selection.domainId;
 
     return {
       selection,

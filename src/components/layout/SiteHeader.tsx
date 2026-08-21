@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { DomainBar } from "@/components/overview/DomainBar";
 import { portfolioData } from "@/data/portfolio-data";
 
 import styles from "./SiteHeader.module.css";
@@ -16,6 +17,7 @@ const VIEWS = [
 export function SiteHeader() {
   const pathname = usePathname();
   const { person } = portfolioData;
+  const isExplore = pathname === "/";
 
   return (
     <header className={styles.header}>
@@ -23,7 +25,15 @@ export function SiteHeader() {
         {person.name}
       </Link>
 
-      <nav aria-label="Views">
+      {/* Ordered by CSS, not markup: beside the name when there is room, on its
+          own row underneath when there is not. */}
+      {isExplore && (
+        <nav aria-label="Work domains" className={styles.domains}>
+          <DomainBar />
+        </nav>
+      )}
+
+      <nav aria-label="Views" className={styles.viewsNav}>
         <ul className={styles.views}>
           {VIEWS.map((view) => {
             const isCurrent = pathname === view.href;

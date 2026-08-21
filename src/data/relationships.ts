@@ -126,41 +126,6 @@ export function experienceForProject(projectId: string): ExperienceEntry[] {
   );
 }
 
-/**
- * The minor bodies: side projects and archived work, flattened to one shape so
- * the scene can render them without caring which list they came from.
- */
-export interface MinorBody {
-  id: string;
-  title: string;
-  summary: string;
-  url: string;
-  kind: "fun" | "archived";
-}
-
-export const minorBodies: MinorBody[] = [
-  ...portfolioData.funProjects.map((project) => ({
-    id: project.id,
-    title: project.title,
-    summary: project.summary,
-    url: project.url,
-    kind: "fun" as const,
-  })),
-  ...portfolioData.archived.map((item) => ({
-    id: item.id,
-    title: item.title,
-    summary: item.summary,
-    url: item.url,
-    kind: "archived" as const,
-  })),
-];
-
-const minorBodiesById = new Map(minorBodies.map((body) => [body.id, body]));
-
-export function minorBodyById(id: string): MinorBody | undefined {
-  return minorBodiesById.get(id);
-}
-
 /** Projects a role produced, resolved to full project records. */
 export function projectsForExperience(entry: ExperienceEntry): Project[] {
   return entry.relatedProjects
