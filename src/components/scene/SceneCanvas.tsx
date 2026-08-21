@@ -69,7 +69,7 @@ export default function SceneCanvas({
       // Clicking empty space returns to the overview, the same as Escape.
       onPointerMissed={() => onSelect({ kind: "overview" })}
     >
-      <CameraRig />
+      <CameraRig selection={selection} reducedMotion={reducedMotion} />
 
       {/* Low ambient so night sides read as shadowed, not as holes. */}
       <ambientLight intensity={0.22} />

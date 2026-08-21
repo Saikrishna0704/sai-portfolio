@@ -5,7 +5,7 @@ import { useMemo, useRef } from "react";
 import { Color, type Group, type Mesh } from "three";
 
 import { MOON_COLOR, type PlanetLayout } from "@/scene/layout";
-import { PLANET_SPIN_SPEED, orbitAngularSpeed } from "@/scene/motion";
+import { PLANET_SPIN_SPEED, planetAngleAt } from "@/scene/motion";
 import type { Hover, Selection } from "@/state/selection";
 
 import { BodyLabel } from "./BodyLabel";
@@ -59,11 +59,6 @@ export function DomainPlanet({
   const groupRef = useRef<Group>(null);
   const bodyRef = useRef<Mesh>(null);
 
-  const angularSpeed = useMemo(
-    () => orbitAngularSpeed(planet.orbitRadius),
-    [planet.orbitRadius],
-  );
-
   const isActive = activeDomainId === planet.domainId;
   const isDimmed = activeDomainId !== null && !isActive;
 
@@ -90,7 +85,7 @@ export function DomainPlanet({
     // Absolute elapsed time, never an accumulated delta: no drift, and a
     // dropped frame cannot leave the planet permanently behind.
     const elapsed = state.clock.elapsedTime;
-    const angle = planet.orbitAngle + elapsed * angularSpeed;
+    const angle = planetAngleAt(planet, elapsed, reducedMotion);
 
     // set() rather than a new Vector3 — this runs every frame.
     groupRef.current?.position.set(

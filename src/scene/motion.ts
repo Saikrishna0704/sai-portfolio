@@ -10,7 +10,7 @@
  * a dropped frame cannot leave the system permanently offset.
  */
 
-import { WORLD } from "./layout";
+import { WORLD, type PlanetLayout } from "./layout";
 
 /** Seconds for a planet on the innermost domain orbit to travel once around. */
 const INNER_ORBIT_PERIOD = 300;
@@ -25,6 +25,22 @@ const INNER_ORBIT_PERIOD = 300;
 export function orbitAngularSpeed(orbitRadius: number): number {
   const base = (Math.PI * 2) / INNER_ORBIT_PERIOD;
   return base * (WORLD.firstOrbitRadius / orbitRadius) ** 1.5;
+}
+
+/**
+ * Where a planet is on its orbit at a given moment.
+ *
+ * Shared by the planet itself and by the camera that follows it — the camera
+ * has to agree exactly with where the body is drawn, and recomputing from the
+ * same function is more reliable than reading a ref that may be a frame stale.
+ */
+export function planetAngleAt(
+  planet: PlanetLayout,
+  elapsed: number,
+  reducedMotion: boolean,
+): number {
+  if (reducedMotion) return planet.orbitAngle;
+  return planet.orbitAngle + elapsed * orbitAngularSpeed(planet.orbitRadius);
 }
 
 /** Axial spin, radians per second. */

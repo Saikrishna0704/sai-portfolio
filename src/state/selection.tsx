@@ -38,6 +38,8 @@ interface SelectionContextValue {
   activeDomainId: string | null;
   select: (next: Selection) => void;
   setHover: (next: Hover | null) => void;
+  /** Steps up one level: project → its domain → overview. */
+  goUp: () => void;
   clearSelection: () => void;
 }
 
@@ -53,22 +55,39 @@ export function SelectionProvider({ children }: { children: ReactNode }) {
 
   const select = useCallback((next: Selection) => setSelection(next), []);
 
-  // Escape always returns to the overview — an obvious way back that does not
-  // depend on finding a control (PROJECT.md §5).
+  const goUp = useCallback(() => {
+    setSelection((current) =>
+      current.kind === "project"
+        ? { kind: "domain", domainId: current.domainId }
+        : OVERVIEW,
+    );
+  }, []);
+
+  // Escape steps back up the hierarchy rather than jumping straight out, so
+  // there is always a way back that does not depend on finding a control
+  // (PROJECT.md §5) and does not overshoot the level you came from.
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") clearSelection();
+      if (event.key === "Escape") goUp();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [clearSelection]);
+  }, [goUp]);
 
   const value = useMemo<SelectionContextValue>(() => {
     const activeDomainId =
       selection.kind === "overview" ? (hover?.domainId ?? null) : selection.domainId;
 
-    return { selection, hover, activeDomainId, select, setHover, clearSelection };
-  }, [selection, hover, select, clearSelection]);
+    return {
+      selection,
+      hover,
+      activeDomainId,
+      select,
+      setHover,
+      goUp,
+      clearSelection,
+    };
+  }, [selection, hover, select, goUp, clearSelection]);
 
   return (
     <SelectionContext.Provider value={value}>{children}</SelectionContext.Provider>

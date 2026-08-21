@@ -18,7 +18,7 @@ import styles from "./DomainNav.module.css";
  * the same thing.
  */
 export function DomainNav() {
-  const { selection, activeDomainId, select, setHover, clearSelection } =
+  const { selection, activeDomainId, select, setHover, goUp, clearSelection } =
     useSelection();
 
   const activeDomain = portfolioData.domains.find(
@@ -114,13 +114,22 @@ export function DomainNav() {
             })}
           </ul>
 
-          <button
-            type="button"
-            className={styles.back}
-            onClick={clearSelection}
-          >
-            Back to overview
-          </button>
+          {/* One step back, then all the way out. Both are always reachable,
+              so there is never a level you can only leave by guessing. */}
+          <div className={styles.returns}>
+            {selection.kind === "project" && (
+              <button type="button" className={styles.back} onClick={goUp}>
+                ← {selectedDomain.name}
+              </button>
+            )}
+            <button
+              type="button"
+              className={styles.back}
+              onClick={clearSelection}
+            >
+              Back to overview
+            </button>
+          </div>
         </div>
       )}
     </nav>

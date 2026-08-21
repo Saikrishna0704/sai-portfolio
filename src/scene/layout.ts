@@ -55,6 +55,8 @@ const MOON_SPREAD = 0.9;
  * Sized against the label's own pixel width, not just the moon's radius.
  */
 const MOON_LABEL_PUSH = 1.8;
+/** How far a moon's label reaches past its planet's moon ring. */
+export const MOON_LABEL_REACH = MOON_LABEL_PUSH + WORLD.moonRadius;
 /** Multiple of a moon's diameter to keep clear between neighbouring moons. */
 const MOON_CLEARANCE = 1.8;
 /** Gap between one planet's moon ring and the next planet's. */
@@ -92,6 +94,12 @@ export interface PlanetLayout {
   radius: number;
   color: string;
   moonOrbitRadius: number;
+  /**
+   * Radius a camera must frame to show this domain properly: the moon ring
+   * plus the distance its labels are pushed beyond it. Framing only the bodies
+   * pushes the labels off screen, and the labels are the point.
+   */
+  focusRadius: number;
   moons: MoonLayout[];
 }
 
@@ -202,6 +210,8 @@ export function buildSystem(domains: Domain[]): SystemLayout {
       radius: WORLD.planetRadius,
       color: DOMAIN_COLORS[domainIndex % DOMAIN_COLORS.length] ?? FALLBACK_COLOR,
       moonOrbitRadius: ringRadius,
+      focusRadius:
+        moonCount > 0 ? ringRadius + MOON_LABEL_REACH : WORLD.planetRadius * 6,
       moons,
     } satisfies PlanetLayout;
   });

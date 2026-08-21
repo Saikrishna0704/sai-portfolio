@@ -130,6 +130,13 @@
   text-underline-offset: 0.25em;
 }
 
+.returns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+}
+
 .back {
   align-self: flex-start;
   display: flex;
