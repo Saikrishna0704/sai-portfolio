@@ -18,6 +18,11 @@ function subscribe(onStoreChange: () => void): () => void {
 }
 
 function getSnapshot(): boolean {
+  // ?intro replays it on demand. The sequence is deliberately once per tab,
+  // which makes it awkward to show someone or to look at again while working
+  // on it; this is the way back in without clearing session storage by hand.
+  if (!played && window.location.search.includes("intro")) return false;
+
   if (played) return true;
   try {
     return sessionStorage.getItem(SESSION_KEY) === "1";
