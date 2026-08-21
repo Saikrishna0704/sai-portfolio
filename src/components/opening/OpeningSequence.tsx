@@ -9,13 +9,14 @@ import { markOpeningPlayed, useShouldPlayOpening } from "./openingState";
 
 import styles from "./OpeningSequence.module.css";
 
-/** Milliseconds each script holds before the next. Fast: this is a flicker of
- *  many names, not a slideshow of them. */
-const CYCLE_MS = 105;
-/** How long the resolved full name holds before it moves. */
-const HOLD_MS = 430;
-/** The morph itself. */
-const MORPH_MS = 780;
+/** Milliseconds each script holds before the next. Long enough to actually
+ *  read the letterforms rather than register a flicker. */
+const CYCLE_MS = 180;
+/** How long the resolved full name holds before it moves. It should land and
+ *  be still for a beat, not bounce straight into the corner. */
+const HOLD_MS = 620;
+/** The morph itself. Unhurried: this is the moment the page opens. */
+const MORPH_MS = 1150;
 /** Element the name flies into. */
 const BRAND_ID = "site-brand";
 
