@@ -11,10 +11,23 @@
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: rgba(4, 6, 11, 0.93);
-  /* Also seals the scene off from the pointer here. Quick View is a reading
-     surface; selecting bodies that are barely visible behind it would be
-     confusing, and this is already exactly the region that covers them. */
+  /* Solid ground behind the text, clearing towards the right so the system is
+     actually visible in the space the reading column does not use.
+
+     Stops are measured off --measure, the width of that column, so the opaque
+     part always covers the text. On a narrow viewport the later stops fall
+     beyond the right edge and CSS clamps them, which leaves the whole visible
+     area solid without needing a media query. */
+  background: linear-gradient(
+    to right,
+    rgba(4, 6, 11, 0.985) 0,
+    rgba(4, 6, 11, 0.985) var(--measure),
+    rgba(4, 6, 11, 0.6) calc(var(--measure) + 10rem),
+    rgba(4, 6, 11, 0.42) 100%
+  );
+  /* Still seals the scene off from the pointer. Quick View is a reading
+     surface, and the domain navigation that would make a selection meaningful
+     only exists on the overview. */
   pointer-events: auto;
 }
 
