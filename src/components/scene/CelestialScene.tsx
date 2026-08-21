@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
 import { Component, type ReactNode } from "react";
 
 import { useSelection } from "@/state/selection";
@@ -32,11 +33,15 @@ export function CelestialScene() {
   // its own reconciler, so context is not reliably shared across the boundary.
   const { selection, activeDomainId, select, setHover } = useSelection();
 
+  // Anywhere but the overview, the scene is scenery behind a reading surface.
+  const isBackdrop = usePathname() !== "/";
+
   return (
     <SceneBoundary>
       <SceneCanvas
         selection={selection}
         activeDomainId={activeDomainId}
+        isBackdrop={isBackdrop}
         onSelect={select}
         onHover={setHover}
       />

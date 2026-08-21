@@ -18,6 +18,8 @@ import { Starfield } from "./Starfield";
 interface SceneCanvasProps {
   selection: Selection;
   activeDomainId: string | null;
+  /** The scene is scenery behind a reading surface rather than the subject. */
+  isBackdrop: boolean;
   onSelect: (next: Selection) => void;
   onHover: (next: Hover | null) => void;
 }
@@ -39,6 +41,7 @@ interface SceneCanvasProps {
 export default function SceneCanvas({
   selection,
   activeDomainId,
+  isBackdrop,
   onSelect,
   onHover,
 }: SceneCanvasProps) {
@@ -70,6 +73,11 @@ export default function SceneCanvas({
   return (
     <Canvas
       dpr={[1, 2]}
+      /* Measured: on Quick View the scene was still drawing 25 calls and 19k
+         triangles every frame from behind a near-opaque scrim. "demand" rather
+         than "never" so a resize still repaints once, which is the failure the
+         Phase 0 experiment with demand mode was worried about. */
+      frameloop={isBackdrop ? "demand" : "always"}
       gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
       camera={{ fov: 45, near: 0.1, far: 400 }}
       // Clicking empty space returns to the overview, the same as Escape.
