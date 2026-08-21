@@ -1,0 +1,59 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--gutter);
+  background: var(--void);
+  /* Never intercepts: skipping is handled on window, so a click lands on
+     whatever it was aimed at once the overlay goes. */
+  pointer-events: none;
+  transition: background-color 620ms var(--ease-out);
+}
+
+/* The ground drops away as the name flies out, revealing the system that has
+   been loading behind it. */
+.clearing {
+  background: transparent;
+}
+
+.name {
+  /* The header's own face, so the morph lands on matching letterforms rather
+     than crossfading between two different typefaces. */
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(1.5rem, 6vw, 3.25rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--text);
+  white-space: nowrap;
+  transform-origin: center center;
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.65, 0, 0.2, 1);
+  animation: settle 150ms var(--ease-out);
+}
+
+/* A short rise on each script, enough to read as a change without becoming a
+   flicker at this pace. */
+@keyframes settle {
+  from {
+    opacity: 0.35;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Belt and braces: the sequence already declines to run when motion is
+   reduced, but if it ever did, it would not animate. */
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .name {
+    transition: none;
+    animation: none;
+  }
+}

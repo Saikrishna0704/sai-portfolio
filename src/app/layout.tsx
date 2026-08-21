@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Inter } from "next/font/google";
 
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { OpeningSequence } from "@/components/opening/OpeningSequence";
 import { CelestialScene } from "@/components/scene/CelestialScene";
 import { portfolioData } from "@/data/portfolio-data";
 import { SelectionProvider } from "@/state/selection";
@@ -43,6 +44,8 @@ export default function RootLayout({
         <a className="skip-link" href="#main">
           Skip to content
         </a>
+
+        <OpeningSequence />
 
         {/* Selection is shared state: the scene and the DOM navigation both
             read and write it, so neither can drift out of step with the other. */}

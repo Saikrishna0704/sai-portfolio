@@ -22,7 +22,7 @@ export function SiteHeader() {
 
   return (
     <header className={styles.header}>
-      <Link href="/" className={styles.brand}>
+      <Link href="/" id="site-brand" className={styles.brand}>
         {person.name}
       </Link>
 
