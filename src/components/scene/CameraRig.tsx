@@ -34,6 +34,13 @@ const DOMAIN_PADDING = 0.6;
 const PROJECT_FRAME_RADIUS = MOON_LABEL_REACH + 0.8;
 /** Damping rate. Roughly a second to settle: brief, but not a cut. */
 const LAMBDA = 2.8;
+/**
+ * How far out the camera starts on first load, as a multiple of its resting
+ * distance. The system then settles into place instead of appearing already
+ * arrived, which is the difference between the page opening and the page
+ * simply being there.
+ */
+const ARRIVAL_PULLBACK = 1.85;
 
 /** Wraps an angle into [-PI, PI] so damping always takes the short way round. */
 function wrapAngle(angle: number): number {
@@ -142,18 +149,24 @@ export function CameraRig({ selection, reducedMotion }: CameraRigProps) {
         ? Math.atan2(target.z, target.x) + FOCUS_AZIMUTH_OFFSET
         : OVERVIEW_AZIMUTH;
 
-    // Snap on the first frame and whenever motion is reduced; otherwise damp.
-    // Frame-rate independent, so the transition takes the same time at 30fps
-    // as at 120.
-    const t =
-      reducedMotion || !initialised.current
-        ? 1
-        : 1 - Math.exp(-LAMBDA * delta);
-    initialised.current = true;
+    if (!initialised.current) {
+      initialised.current = true;
+      // Aim correctly straight away, so the arrival is a approach rather than
+      // a swing, but start further out and let the damping close the distance.
+      focus.current.copy(target);
+      azimuth.current = desiredAzimuth;
+      distance.current = reducedMotion
+        ? desiredDistance
+        : desiredDistance * ARRIVAL_PULLBACK;
+    } else {
+      // Frame-rate independent, so a transition takes the same time at 30fps
+      // as at 120. Reduced motion snaps instead of gliding.
+      const t = reducedMotion ? 1 : 1 - Math.exp(-LAMBDA * delta);
 
-    focus.current.lerp(target, t);
-    distance.current += (desiredDistance - distance.current) * t;
-    azimuth.current += wrapAngle(desiredAzimuth - azimuth.current) * t;
+      focus.current.lerp(target, t);
+      distance.current += (desiredDistance - distance.current) * t;
+      azimuth.current += wrapAngle(desiredAzimuth - azimuth.current) * t;
+    }
 
     const horizontalReach = Math.cos(ELEVATION) * distance.current;
     camera.position.set(

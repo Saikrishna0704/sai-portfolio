@@ -8,6 +8,7 @@ import { planets } from "@/scene/layout";
 import type { Hover, Selection } from "@/state/selection";
 
 import { CameraRig } from "./CameraRig";
+import { FirstFrameSignal } from "./FirstFrameSignal";
 import { CentralStar } from "./CentralStar";
 import { DomainPlanet } from "./DomainPlanet";
 import { OrbitGuide } from "./OrbitGuide";
@@ -45,6 +46,9 @@ export default function SceneCanvas({
 }: SceneCanvasProps) {
   const reducedMotion = usePrefersReducedMotion();
   const [pointerOverBody, setPointerOverBody] = useState(false);
+  // The scene fades in once it has actually drawn, so the system emerges
+  // instead of popping into an empty canvas.
+  const [hasDrawn, setHasDrawn] = useState(false);
 
   // A pointer cursor is the conventional signal that something is clickable.
   // Set on the canvas element's container rather than per-object so it cannot
@@ -67,6 +71,10 @@ export default function SceneCanvas({
   return (
     <Canvas
       dpr={[1, 2]}
+      style={{
+        opacity: hasDrawn ? 1 : 0,
+        transition: reducedMotion ? "none" : "opacity 900ms ease-out",
+      }}
       /* Measured: on Quick View the scene was still drawing 25 calls and 19k
          triangles every frame from behind a near-opaque scrim. "demand" rather
          than "never" so a resize still repaints once, which is the failure the
@@ -77,6 +85,7 @@ export default function SceneCanvas({
       // Clicking empty space returns to the overview, the same as Escape.
       onPointerMissed={() => onSelect({ kind: "overview" })}
     >
+      <FirstFrameSignal onFirstFrame={() => setHasDrawn(true)} />
       <CameraRig selection={selection} reducedMotion={reducedMotion} />
 
       {/* Low ambient so night sides read as shadowed, not as holes. */}
