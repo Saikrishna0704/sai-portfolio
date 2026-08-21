@@ -6,7 +6,7 @@ import { portfolioData } from "@/data/portfolio-data";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
-  title: `Quick View — ${portfolioData.person.name}`,
+  title: `Quick View · ${portfolioData.person.name}`,
 };
 
 const MONTHS = [
@@ -104,7 +104,7 @@ export default function QuickViewPage() {
                 <div className={styles.entryHead}>
                   <h3 className={styles.entryTitle}>{entry.role}</h3>
                   <p className={styles.entryMeta}>
-                    {formatMonth(entry.start)} –{" "}
+                    {formatMonth(entry.start)} to{" "}
                     {entry.end ? formatMonth(entry.end) : "Present"}
                   </p>
                 </div>

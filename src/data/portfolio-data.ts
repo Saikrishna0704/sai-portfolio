@@ -88,7 +88,7 @@ export const portfolioData: PortfolioData = {
   person: {
     name: "Sai Krishna Tammali",
     tagline: "LLMs | Inference | Kernels | Evals",
-    bio: "I spend most of my time inside language models — writing them from scratch, speeding up how they run, and checking whether any of it actually worked.",
+    bio: "I spend most of my time inside language models, writing them from scratch, speeding up how they run, and checking whether any of it actually worked.",
     links: {
       linkedin: "https://www.linkedin.com/in/saikrishna-tammali/",
       github: "https://github.com/Saikrishna0704",
@@ -110,7 +110,7 @@ export const portfolioData: PortfolioData = {
           id: "llm-from-scratch",
           title: "llm-from-scratch",
           type: "code",
-          summary: "A 128M-parameter language model built from scratch to understand the transformer layer and everything around it — attention, positional encoding, training loop, end to end.",
+          summary: "A 128M-parameter language model built from scratch to understand the transformer layer and everything around it: attention, positional encoding, training loop, end to end.",
           url: "https://github.com/Saikrishna0704/llm-from-scratch",
           technologies: ["python", "pytorch"],
         },
@@ -119,7 +119,7 @@ export const portfolioData: PortfolioData = {
     {
       id: "inference",
       name: "Inference",
-      description: "How LLMs actually run once they're trained — the systems side of serving them fast.",
+      description: "How LLMs actually run once they're trained: the systems side of serving them fast.",
       relatedSkills: ["python", "triton", "kernels"],
       projects: [
         {
@@ -178,7 +178,7 @@ export const portfolioData: PortfolioData = {
       summary: "Undergraduate research comparing machine learning and ensemble methods to classify near-Earth asteroids as hazardous, using NASA JPL's small-body dataset.",
       url: "https://doi.org/10.1007/978-981-16-7389-4_34",
       year: 2022,
-      note: "Early undergraduate work, unrelated to current LLM/inference focus — kept as a small, unlabeled corner object rather than a main domain.",
+      note: "Early undergraduate work, unrelated to current LLM/inference focus. Kept as a small, unlabeled corner object rather than a main domain.",
     },
   ],
 };

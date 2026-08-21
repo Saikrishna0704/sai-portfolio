@@ -25,7 +25,7 @@ const plexMono = IBM_Plex_Mono({
 const { person } = portfolioData;
 
 export const metadata: Metadata = {
-  title: `${person.name} — ${person.tagline}`,
+  title: `${person.name} · ${person.tagline}`,
   description: person.bio,
 };
 
