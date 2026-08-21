@@ -71,6 +71,11 @@ export interface PortfolioData {
   skills: Skill[];
   experience: ExperienceEntry[];
   education: EducationEntry[];
+  /**
+   * Side projects built for their own sake. Deliberately outside `domains`:
+   * they are not areas of professional focus, so they do not get a planet.
+   */
+  funProjects: Project[];
   archived: ArchivedObject[];
 }
 
@@ -168,6 +173,29 @@ export const portfolioData: PortfolioData = {
       // since Buffalo offers both and the exact credential was not specified.
       degree: "Masters in Data Science",
       institution: "University at Buffalo",
+    },
+  ],
+
+  // Summaries taken from each repository's own README, since neither repo has
+  // a GitHub description set.
+  funProjects: [
+    {
+      id: "nye-trip-tracker",
+      title: "NYE Trip Tracker",
+      type: "code",
+      summary:
+        "Hour by hour trip itinerary with budget tracking split across three people. Logs spend per hour, totals it per person, and exports the plan as CSV or JSON.",
+      url: "https://github.com/Saikrishna0704/NYETripTracker",
+      technologies: ["python"],
+    },
+    {
+      id: "chat-stalker-ai",
+      title: "chatStalkerAI",
+      type: "code",
+      summary:
+        "A fun app for analyzing WhatsApp group chat exports, with an AI assistant for asking questions about the conversation and a word counter that breaks message volume down by participant.",
+      url: "https://github.com/Saikrishna0704/chatStalkerAI",
+      technologies: ["python"],
     },
   ],
 

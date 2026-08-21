@@ -33,8 +33,15 @@ function formatMonth(value: string): string {
 }
 
 export default function QuickViewPage() {
-  const { person, domains, experience, education, skills, archived } =
-    portfolioData;
+  const {
+    person,
+    domains,
+    experience,
+    education,
+    skills,
+    funProjects,
+    archived,
+  } = portfolioData;
 
   // Every section here renders content that actually exists. Resume is the one
   // deliberate omission: no URL has been supplied, and an empty link is worse
@@ -57,37 +64,6 @@ export default function QuickViewPage() {
           About
         </h2>
         <p className={styles.bio}>{person.bio}</p>
-      </section>
-
-      {/* The scene layer is aria-hidden, so this is where domain and project
-          names exist for assistive technology and without WebGL. */}
-      <section className={styles.section} aria-labelledby="work">
-        <h2 id="work" className={styles.heading}>
-          Work
-        </h2>
-        <div className={styles.domains}>
-          {domains.map((domain) => (
-            <article key={domain.id} className={styles.domain}>
-              <h3 className={styles.domainName}>{domain.name}</h3>
-              <p className={styles.domainDescription}>{domain.description}</p>
-              <ul className={styles.projects}>
-                {domain.projects.map((project) => (
-                  <li key={project.id} className={styles.project}>
-                    <a
-                      className={styles.projectTitle}
-                      href={project.url}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {project.title}
-                    </a>
-                    <p className={styles.projectSummary}>{project.summary}</p>
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
       </section>
 
       {experience.length > 0 && (
@@ -135,6 +111,37 @@ export default function QuickViewPage() {
         </section>
       )}
 
+      {/* The scene layer is aria-hidden, so this is where domain and project
+          names exist for assistive technology and without WebGL. */}
+      <section className={styles.section} aria-labelledby="work">
+        <h2 id="work" className={styles.heading}>
+          Work
+        </h2>
+        <div className={styles.domains}>
+          {domains.map((domain) => (
+            <article key={domain.id} className={styles.domain}>
+              <h3 className={styles.domainName}>{domain.name}</h3>
+              <p className={styles.domainDescription}>{domain.description}</p>
+              <ul className={styles.projects}>
+                {domain.projects.map((project) => (
+                  <li key={project.id} className={styles.project}>
+                    <a
+                      className={styles.projectTitle}
+                      href={project.url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {project.title}
+                    </a>
+                    <p className={styles.projectSummary}>{project.summary}</p>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
+      </section>
+
       {skills.length > 0 && (
         <section className={styles.section} aria-labelledby="skills">
           <h2 id="skills" className={styles.heading}>
@@ -146,6 +153,31 @@ export default function QuickViewPage() {
             {skills.map((skill) => (
               <li key={skill.id} className={styles.skill}>
                 {skill.name}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {funProjects.length > 0 && (
+        <section className={styles.section} aria-labelledby="fun">
+          <h2 id="fun" className={styles.heading}>
+            Fun projects
+          </h2>
+          {/* Built for their own sake, so they sit apart from the domains
+              rather than inside one. */}
+          <ul className={styles.entries}>
+            {funProjects.map((project) => (
+              <li key={project.id} className={styles.project}>
+                <a
+                  className={styles.projectTitle}
+                  href={project.url}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {project.title}
+                </a>
+                <p className={styles.projectSummary}>{project.summary}</p>
               </li>
             ))}
           </ul>
