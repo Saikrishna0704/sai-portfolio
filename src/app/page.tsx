@@ -1,4 +1,3 @@
-import { SocialLinks } from "@/components/contact/SocialLinks";
 import { SelectionPanel } from "@/components/overview/SelectionPanel";
 import { portfolioData } from "@/data/portfolio-data";
 
@@ -19,8 +18,6 @@ export default function ExplorePage() {
       </h1>
 
       <SelectionPanel />
-
-      <SocialLinks links={person.links} />
     </section>
   );
 }

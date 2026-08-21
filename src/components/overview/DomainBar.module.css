@@ -1,6 +1,8 @@
 .list {
   display: flex;
-  flex-wrap: wrap;
+  /* Never wrap: the header row scrolls sideways instead. Wrapping turned three
+     domains into three stacked rows once the bar was squeezed on a phone. */
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.15rem;
 }

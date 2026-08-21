@@ -24,16 +24,35 @@
   order: 1;
 }
 
-.domains {
+/* Narrow: a row of its own holding domains on the left and contact on the
+   right. Wide: dissolved, so its children sit directly in the header row. */
+.secondary {
   order: 3;
   flex-basis: 100%;
+  display: flex;
+  /* Never wrap. Domains and contact stay on one line and the domain list
+     scrolls instead, which keeps the header at two rows on a phone rather
+     than growing to four. */
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.domains {
   /* The row can outgrow a phone; let it scroll rather than wrap to a third. */
   overflow-x: auto;
   scrollbar-width: none;
+  min-width: 0;
 }
 
 .domains::-webkit-scrollbar {
   display: none;
+}
+
+.socials {
+  flex: 0 0 auto;
 }
 
 .viewsNav {
@@ -41,14 +60,23 @@
   margin-left: auto;
 }
 
-@media (min-width: 56rem) {
+@media (min-width: 62rem) {
+  .secondary {
+    display: contents;
+  }
+
   .domains {
     order: 2;
-    flex-basis: auto;
+  }
+
+  .socials {
+    order: 3;
+    margin-left: auto;
   }
 
   .viewsNav {
-    order: 3;
+    order: 4;
+    margin-left: 0;
   }
 }
 

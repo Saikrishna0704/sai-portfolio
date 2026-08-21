@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { SocialLinks } from "@/components/contact/SocialLinks";
 import { DomainBar } from "@/components/overview/DomainBar";
 import { portfolioData } from "@/data/portfolio-data";
 
@@ -25,13 +26,20 @@ export function SiteHeader() {
         {person.name}
       </Link>
 
-      {/* Ordered by CSS, not markup: beside the name when there is room, on its
-          own row underneath when there is not. */}
-      {isExplore && (
-        <nav aria-label="Work domains" className={styles.domains}>
-          <DomainBar />
-        </nav>
-      )}
+      {/* Ordered by CSS, not markup. Wide: one line, name to toggle. Narrow:
+          name and toggle share a row, domains and contact take the next.
+          `display: contents` dissolves this wrapper at the wider size so its
+          children join the header's own flex row. */}
+      <div className={styles.secondary}>
+        {isExplore && (
+          <nav aria-label="Work domains" className={styles.domains}>
+            <DomainBar />
+          </nav>
+        )}
+        <div className={styles.socials}>
+          <SocialLinks links={person.links} />
+        </div>
+      </div>
 
       <nav aria-label="Views" className={styles.viewsNav}>
         <ul className={styles.views}>

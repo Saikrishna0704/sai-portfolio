@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 
-import { SocialLinks } from "@/components/contact/SocialLinks";
 import { portfolioData } from "@/data/portfolio-data";
 import {
   experienceForProject,
@@ -80,10 +79,8 @@ export function QuickViewContent() {
       <header className={styles.masthead}>
         <h1 className={styles.name}>{person.name}</h1>
         <p className={styles.tagline}>{person.tagline}</p>
-        {/* Directly under the name: this page reads as a résumé, and contact
-            details belong where someone looks for them, not after a full
-            scroll. */}
-        <SocialLinks links={person.links} />
+        {/* Contact lives in the header now, which is sticky and therefore on
+            screen at every scroll position rather than only at the top. */}
       </header>
 
       <section className={styles.section} aria-labelledby="about">
