@@ -1,0 +1,30 @@
+/* Overview shell. The scene behind it is empty in Phase 0; the central star and
+   domain planets take over this space in Phase 1, so the type block stays to
+   one side rather than centred. */
+.overview {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 4rem var(--gutter);
+  max-width: var(--measure);
+}
+
+.eyebrow {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.name {
+  font-size: clamp(2.25rem, 8vw, 4.5rem);
+}
+
+@media (min-width: 48rem) {
+  .overview {
+    padding: 6rem var(--gutter);
+  }
+}

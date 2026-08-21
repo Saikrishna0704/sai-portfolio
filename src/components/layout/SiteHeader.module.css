@@ -1,0 +1,56 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: var(--header-height);
+  padding: 0 var(--gutter);
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--void) 72%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.brand {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.views {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.view {
+  display: block;
+  /* Keeps the tap target at 44px and stops "Quick View" wrapping on narrow screens. */
+  padding: 0.7rem 0.75rem;
+  white-space: nowrap;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  transition: color 160ms var(--ease-out), background-color 160ms var(--ease-out);
+}
+
+.view:hover {
+  color: var(--text);
+}
+
+.view[aria-current="page"] {
+  color: var(--text);
+  background: var(--accent-soft);
+}
+
+@media (min-width: 48rem) {
+  .view {
+    /* Only the horizontal breathing room grows — the 44px target height holds
+       at every width, since 48rem is still touch territory. */
+    padding: 0.7rem 1rem;
+  }
+}

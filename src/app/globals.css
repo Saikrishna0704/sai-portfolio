@@ -1,0 +1,139 @@
+/*
+ * Base theme — Phase 0.
+ * Direction (PROJECT.md §8): scientific + cinematic + sophisticated.
+ * Deep neutral space tones, restrained highlights, strong typography.
+ * The page ground is CSS, not the WebGL clear colour, so the shell looks
+ * identical whether or not the 3D scene renders.
+ */
+
+:root {
+  /* Ground */
+  --void: #04060b;
+  --deep: #080c14;
+  --elevated: #0d131e;
+
+  /* Rules and edges */
+  --line: rgba(214, 226, 245, 0.1);
+  --line-strong: rgba(214, 226, 245, 0.2);
+
+  /* Type */
+  --text: #e6ecf6;
+  --text-muted: #909db4;
+  --text-faint: #5e6979;
+
+  /* Restrained stellar highlight */
+  --accent: #b9d4ff;
+  --accent-soft: rgba(185, 212, 255, 0.12);
+
+  /* Rhythm */
+  --header-height: 3.75rem;
+  --gutter: 1.25rem;
+  --measure: 42rem;
+
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  color-scheme: dark;
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --header-height: 4.5rem;
+    --gutter: 2.5rem;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100svh;
+  background-color: var(--void);
+  /* Faint atmospheric depth — one soft gradient, no particles. */
+  background-image: radial-gradient(
+    120% 90% at 50% 0%,
+    var(--deep) 0%,
+    var(--void) 62%
+  );
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Keyboard-reachable escape from the shell chrome into content. */
+.skip-link {
+  position: absolute;
+  left: var(--gutter);
+  top: 0;
+  z-index: 100;
+  padding: 0.6rem 0.9rem;
+  transform: translateY(-150%);
+  background: var(--elevated);
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  transition: transform 160ms var(--ease-out);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0.75rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
