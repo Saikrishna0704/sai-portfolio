@@ -58,6 +58,42 @@
   color: var(--accent);
 }
 
+/* The belt: present and reachable, but visibly a tier below the domains. */
+.minor {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin-top: -0.35rem;
+}
+
+.minorButton {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.15rem;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  text-align: left;
+  cursor: pointer;
+  transition: color 160ms var(--ease-out);
+}
+
+.minorButton:hover {
+  color: var(--text-muted);
+}
+
+.minorButton[aria-pressed="true"] {
+  color: var(--accent);
+}
+
+.minorTitle {
+  font-size: 1rem;
+}
+
 .detail {
   display: flex;
   flex-direction: column;

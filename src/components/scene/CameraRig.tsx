@@ -4,8 +4,13 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useRef } from "react";
 import { MathUtils, PerspectiveCamera, Vector3 } from "three";
 
-import { MOON_LABEL_REACH, planets, systemRadius } from "@/scene/layout";
-import { planetAngleAt } from "@/scene/motion";
+import {
+  MOON_LABEL_REACH,
+  asteroids,
+  planets,
+  systemRadius,
+} from "@/scene/layout";
+import { beltRotationAt, planetAngleAt } from "@/scene/motion";
 import type { Selection } from "@/state/selection";
 
 /** Viewing elevation above the orbital plane, held constant at every level so
@@ -32,6 +37,9 @@ const DOMAIN_PADDING = 0.6;
 /** What a focused project frames: far enough out to keep the moon's label on
  *  screen, which also leaves its planet visible for context. */
 const PROJECT_FRAME_RADIUS = MOON_LABEL_REACH + 0.8;
+/** Asteroids sit alone in the belt, so their frame only has to hold the body
+ *  and its label rather than a neighbouring planet too. */
+const ASTEROID_FRAME_RADIUS = 2.2;
 /** Damping rate. Roughly a second to settle: brief, but not a cut. */
 const LAMBDA = 2.8;
 
@@ -101,7 +109,21 @@ export function CameraRig({ selection, reducedMotion }: CameraRigProps) {
     let radius = systemRadius;
     let verticalExtent = Math.sin(ELEVATION);
 
-    if (selection.kind !== "overview") {
+    if (selection.kind === "asteroid") {
+      const asteroid = asteroids.find((item) => item.id === selection.asteroidId);
+      if (asteroid) {
+        // The belt turns as one group, so the layout position has to be turned
+        // with it or the camera arrives where the rock used to be.
+        const turn = beltRotationAt(elapsed, reducedMotion);
+        const cos = Math.cos(turn);
+        const sin = Math.sin(turn);
+        const [x, y, z] = asteroid.position;
+
+        target.set(x * cos + z * sin, y, -x * sin + z * cos);
+        radius = ASTEROID_FRAME_RADIUS;
+        verticalExtent = 1;
+      }
+    } else if (selection.kind !== "overview") {
       const planet = planets.find((item) => item.domainId === selection.domainId);
 
       if (planet) {

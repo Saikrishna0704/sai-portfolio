@@ -46,5 +46,27 @@ export function planetAngleAt(
 /** Axial spin, radians per second. */
 export const PLANET_SPIN_SPEED = 0.06;
 
+/**
+ * Belt drift, radians per second. Slower than the outermost planet, which is
+ * both what a wider orbit implies and what keeps the edge of the system from
+ * pulling attention.
+ */
+export const ASTEROID_DRIFT_SPEED = 0.008;
+
+/**
+ * How far the belt has turned at a given moment.
+ *
+ * The belt rotates as one group, so an asteroid's layout position is not where
+ * it actually is. Shared by the belt and by the camera that flies to it, for
+ * the same reason `planetAngleAt` is: a camera aiming at a stale position
+ * arrives at empty space.
+ */
+export function beltRotationAt(
+  elapsed: number,
+  reducedMotion: boolean,
+): number {
+  return reducedMotion ? 0 : elapsed * ASTEROID_DRIFT_SPEED;
+}
+
 /** Sky drift, radians per second — an order of magnitude below the planets. */
 export const STARFIELD_DRIFT_SPEED = 0.0012;

@@ -7,6 +7,7 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { planets } from "@/scene/layout";
 import type { Hover, Selection } from "@/state/selection";
 
+import { AsteroidBelt } from "./AsteroidBelt";
 import { CameraRig } from "./CameraRig";
 import { CentralStar } from "./CentralStar";
 import { DomainPlanet } from "./DomainPlanet";
@@ -42,6 +43,9 @@ export default function SceneCanvas({
 }: SceneCanvasProps) {
   const reducedMotion = usePrefersReducedMotion();
   const [pointerOverBody, setPointerOverBody] = useState(false);
+  // Asteroids belong to no domain, so their hover cannot ride on the domain
+  // hover the planets share.
+  const [hoveredAsteroidId, setHoveredAsteroidId] = useState<string | null>(null);
 
   // A pointer cursor is the conventional signal that something is clickable.
   // Set on the canvas element's container rather than per-object so it cannot
@@ -104,6 +108,17 @@ export default function SceneCanvas({
           onHover={handleHover}
         />
       ))}
+
+      <AsteroidBelt
+        selection={selection}
+        reducedMotion={reducedMotion}
+        hoveredId={hoveredAsteroidId}
+        onSelect={onSelect}
+        onHover={(id) => {
+          setHoveredAsteroidId(id);
+          setPointerOverBody(id !== null);
+        }}
+      />
     </Canvas>
   );
 }
