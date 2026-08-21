@@ -12,6 +12,10 @@
   inset: 0;
   z-index: -1;
   background: rgba(4, 6, 11, 0.93);
+  /* Also seals the scene off from the pointer here. Quick View is a reading
+     surface; selecting bodies that are barely visible behind it would be
+     confusing, and this is already exactly the region that covers them. */
+  pointer-events: auto;
 }
 
 .page {
@@ -22,6 +26,7 @@
   width: 100%;
   max-width: var(--measure);
   padding: 3rem var(--gutter) 5rem;
+  pointer-events: auto;
 }
 
 .section {

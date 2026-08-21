@@ -2,8 +2,10 @@
   position: fixed;
   inset: 0;
   z-index: 0;
-  /* Decorative layer: never intercept selection or scrolling. */
-  pointer-events: none;
+  /* Bodies are selectable from Phase 4 on, so the canvas must receive pointer
+     events. Everything above it opts out (see `.shell`) rather than the canvas
+     opting in, so empty space falls through to the scene. */
+  pointer-events: auto;
 }
 
 .shell {
@@ -12,6 +14,11 @@
   display: flex;
   min-height: 100svh;
   flex-direction: column;
+  /* The shell covers the whole viewport but is mostly empty. If it swallowed
+     pointer events nothing in the scene below could ever be clicked, so it is
+     transparent to the pointer and each real surface — header, page content —
+     switches itself back on. */
+  pointer-events: none;
 }
 
 .main {

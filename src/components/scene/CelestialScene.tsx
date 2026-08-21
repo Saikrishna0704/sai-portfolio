@@ -3,6 +3,8 @@
 import dynamic from "next/dynamic";
 import { Component, type ReactNode } from "react";
 
+import { useSelection } from "@/state/selection";
+
 // WebGL has no server-side equivalent; keep it out of the SSR pass entirely.
 const SceneCanvas = dynamic(() => import("./SceneCanvas"), { ssr: false });
 
@@ -26,9 +28,18 @@ class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean
 }
 
 export function CelestialScene() {
+  // Read here, outside the Canvas, and hand down as props: R3F renders with
+  // its own reconciler, so context is not reliably shared across the boundary.
+  const { selection, activeDomainId, select, setHover } = useSelection();
+
   return (
     <SceneBoundary>
-      <SceneCanvas />
+      <SceneCanvas
+        selection={selection}
+        activeDomainId={activeDomainId}
+        onSelect={select}
+        onHover={setHover}
+      />
     </SceneBoundary>
   );
 }

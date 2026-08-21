@@ -9,6 +9,8 @@ interface BodyLabelProps {
   /** Where the label sits relative to its body, in world units. */
   position: [number, number, number];
   variant: "domain" | "project";
+  /** Recedes with its body when another domain holds focus. */
+  dimmed: boolean;
 }
 
 /**
@@ -19,7 +21,12 @@ interface BodyLabelProps {
  * The whole scene layer is `aria-hidden`, so these are the visual echo of the
  * domain and project names; Quick View carries them for assistive technology.
  */
-export function BodyLabel({ text, position, variant }: BodyLabelProps) {
+export function BodyLabel({
+  text,
+  position,
+  variant,
+  dimmed,
+}: BodyLabelProps) {
   return (
     <Html
       position={position}
@@ -29,7 +36,14 @@ export function BodyLabel({ text, position, variant }: BodyLabelProps) {
       // Keep labels behind the DOM shell chrome.
       zIndexRange={[5, 0]}
     >
-      <span className={variant === "domain" ? styles.domain : styles.project}>
+      <span
+        className={[
+          variant === "domain" ? styles.domain : styles.project,
+          dimmed ? styles.dimmed : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
         {text}
       </span>
     </Html>

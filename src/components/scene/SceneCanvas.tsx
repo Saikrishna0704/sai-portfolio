@@ -1,9 +1,11 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
+import { useCallback, useEffect, useState } from "react";
 
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { planets } from "@/scene/layout";
+import type { Hover, Selection } from "@/state/selection";
 
 import { CameraRig } from "./CameraRig";
 import { CentralStar } from "./CentralStar";
@@ -11,30 +13,61 @@ import { DomainPlanet } from "./DomainPlanet";
 import { OrbitGuide } from "./OrbitGuide";
 import { Starfield } from "./Starfield";
 
+interface SceneCanvasProps {
+  selection: Selection;
+  activeDomainId: string | null;
+  onSelect: (next: Selection) => void;
+  onHover: (next: Hover | null) => void;
+}
+
 /**
- * Phase 3: the system is alive.
+ * Phase 4: the system responds.
  *
- * Planets travel their orbits, bodies spin, and the sky drifts — all of it
- * slow enough to read as ambient life rather than animation. The star holds
- * still: it is the fixed centre the rest of the system is measured against.
+ * Bodies are hoverable and selectable, emphasis follows the active domain, and
+ * project labels appear only for the domain in focus. The camera does not move
+ * yet — that is Phase 5.
  *
- * The reduced-motion preference is read here, outside the Canvas, and passed
- * down as a prop rather than through context — R3F renders with its own
- * reconciler, and an explicit prop avoids depending on context bridging.
- * When motion is reduced the scene renders exactly as its static layout, which
- * is a complete view in itself.
+ * Selection state is owned by React and passed in as props rather than read
+ * from context inside the Canvas: R3F renders with its own reconciler, so an
+ * explicit prop avoids depending on context bridging.
  *
  * The canvas is transparent so the page's CSS ground is the single source of
  * the background colour.
  */
-export default function SceneCanvas() {
+export default function SceneCanvas({
+  selection,
+  activeDomainId,
+  onSelect,
+  onHover,
+}: SceneCanvasProps) {
   const reducedMotion = usePrefersReducedMotion();
+  const [pointerOverBody, setPointerOverBody] = useState(false);
+
+  // A pointer cursor is the conventional signal that something is clickable.
+  // Set on the canvas element's container rather than per-object so it cannot
+  // be left stuck when a body unmounts mid-hover.
+  useEffect(() => {
+    document.body.style.cursor = pointerOverBody ? "pointer" : "";
+    return () => {
+      document.body.style.cursor = "";
+    };
+  }, [pointerOverBody]);
+
+  const handleHover = useCallback(
+    (next: Hover | null) => {
+      setPointerOverBody(next !== null);
+      onHover(next);
+    },
+    [onHover],
+  );
 
   return (
     <Canvas
       dpr={[1, 2]}
       gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
       camera={{ fov: 45, near: 0.1, far: 400 }}
+      // Clicking empty space returns to the overview, the same as Escape.
+      onPointerMissed={() => onSelect({ kind: "overview" })}
     >
       <CameraRig />
 
@@ -47,7 +80,17 @@ export default function SceneCanvas() {
       <CentralStar />
 
       {planets.map((planet) => (
-        <OrbitGuide key={`orbit-${planet.domainId}`} radius={planet.orbitRadius} />
+        <OrbitGuide
+          key={`orbit-${planet.domainId}`}
+          radius={planet.orbitRadius}
+          opacity={
+            activeDomainId === null
+              ? 0.16
+              : activeDomainId === planet.domainId
+                ? 0.42
+                : 0.06
+          }
+        />
       ))}
 
       {planets.map((planet) => (
@@ -55,6 +98,10 @@ export default function SceneCanvas() {
           key={planet.domainId}
           planet={planet}
           reducedMotion={reducedMotion}
+          activeDomainId={activeDomainId}
+          selection={selection}
+          onSelect={onSelect}
+          onHover={handleHover}
         />
       ))}
     </Canvas>
