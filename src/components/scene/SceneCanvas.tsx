@@ -3,6 +3,7 @@
 import { Canvas } from "@react-three/fiber";
 import { useCallback, useEffect, useState } from "react";
 
+import { useIsCompact } from "@/hooks/useIsCompact";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { planets } from "@/scene/layout";
 import type { Hover, Selection } from "@/state/selection";
@@ -42,6 +43,7 @@ export default function SceneCanvas({
   onHover,
 }: SceneCanvasProps) {
   const reducedMotion = usePrefersReducedMotion();
+  const isCompact = useIsCompact();
   const [pointerOverBody, setPointerOverBody] = useState(false);
   // Asteroids belong to no domain, so their hover cannot ride on the domain
   // hover the planets share.
@@ -73,7 +75,11 @@ export default function SceneCanvas({
       // Clicking empty space returns to the overview, the same as Escape.
       onPointerMissed={() => onSelect({ kind: "overview" })}
     >
-      <CameraRig selection={selection} reducedMotion={reducedMotion} />
+      <CameraRig
+        selection={selection}
+        reducedMotion={reducedMotion}
+        isCompact={isCompact}
+      />
 
       {/* Low ambient so night sides read as shadowed, not as holes. */}
       <ambientLight intensity={0.22} />
@@ -109,16 +115,22 @@ export default function SceneCanvas({
         />
       ))}
 
-      <AsteroidBelt
-        selection={selection}
-        reducedMotion={reducedMotion}
-        hoveredId={hoveredAsteroidId}
-        onSelect={onSelect}
-        onHover={(id) => {
-          setHoveredAsteroidId(id);
-          setPointerOverBody(id !== null);
-        }}
-      />
+      {/* Dropped on narrow screens. Framing the belt costs about a quarter of
+          every body's on-screen size, and the rocks themselves land near three
+          pixels there, so it is paid for with nothing visible. The projects
+          stay reachable through Quick View and the overview list. */}
+      {!isCompact && (
+        <AsteroidBelt
+          selection={selection}
+          reducedMotion={reducedMotion}
+          hoveredId={hoveredAsteroidId}
+          onSelect={onSelect}
+          onHover={(id) => {
+            setHoveredAsteroidId(id);
+            setPointerOverBody(id !== null);
+          }}
+        />
+      )}
     </Canvas>
   );
 }

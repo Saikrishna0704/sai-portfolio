@@ -7,6 +7,7 @@ import { MathUtils, PerspectiveCamera, Vector3 } from "three";
 import {
   MOON_LABEL_REACH,
   asteroids,
+  coreRadius,
   planets,
   systemRadius,
 } from "@/scene/layout";
@@ -71,6 +72,8 @@ function fitDistance(
 interface CameraRigProps {
   selection: Selection;
   reducedMotion: boolean;
+  /** Narrow viewport: the belt is not drawn, so it is not framed either. */
+  isCompact: boolean;
 }
 
 /**
@@ -90,7 +93,11 @@ interface CameraRigProps {
  * mid-flight simply re-targets. Repeated interaction cannot corrupt state
  * because there is no state to corrupt beyond the camera's own position.
  */
-export function CameraRig({ selection, reducedMotion }: CameraRigProps) {
+export function CameraRig({
+  selection,
+  reducedMotion,
+  isCompact,
+}: CameraRigProps) {
   const camera = useThree((state) => state.camera);
 
   const focus = useRef(new Vector3());
@@ -106,7 +113,7 @@ export function CameraRig({ selection, reducedMotion }: CameraRigProps) {
     const target = desiredFocus.current;
 
     target.set(0, 0, 0);
-    let radius = systemRadius;
+    let radius = isCompact ? coreRadius : systemRadius;
     let verticalExtent = Math.sin(ELEVATION);
 
     if (selection.kind === "asteroid") {

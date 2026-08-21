@@ -17,11 +17,26 @@
 }
 
 .brand {
+  display: flex;
+  align-items: center;
+  /* A link is a control; it gets the same target height as the rest. */
+  min-height: 44px;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.8125rem;
-  letter-spacing: 0.08em;
+  /* Tracked-out uppercase in a mono face is wide. At 388px the full name wrapped
+     to three lines and pushed the header taller, so the tracking and size ease
+     off until there is room for it. */
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
+  white-space: nowrap;
   color: var(--text);
+}
+
+@media (min-width: 30rem) {
+  .brand {
+    font-size: 0.8125rem;
+    letter-spacing: 0.08em;
+  }
 }
 
 .views {

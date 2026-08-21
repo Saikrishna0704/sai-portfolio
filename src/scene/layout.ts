@@ -132,6 +132,13 @@ export interface SystemLayout {
    * outermost moon ring and the asteroid belt.
    */
   radius: number;
+  /**
+   * The same, ignoring the belt. Framing the belt costs roughly a quarter of
+   * every body's on-screen size, which is not a trade worth making on a screen
+   * where the bodies are already small (PROJECT.md §12: mobile may show fewer
+   * bodies).
+   */
+  coreRadius: number;
 }
 
 function onOrbit(radius: number, angle: number): [number, number, number] {
@@ -291,7 +298,7 @@ export function buildSystem(
     planetsRadius,
   );
 
-  return { planets, asteroids, radius };
+  return { planets, asteroids, radius, coreRadius: planetsRadius };
 }
 
 /**
@@ -308,3 +315,4 @@ const system = buildSystem(portfolioData.domains, minorBodyIds);
 export const planets = system.planets;
 export const asteroids = system.asteroids;
 export const systemRadius = system.radius;
+export const coreRadius = system.coreRadius;
