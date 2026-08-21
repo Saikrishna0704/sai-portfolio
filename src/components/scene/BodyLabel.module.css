@@ -1,0 +1,42 @@
+.domain,
+.project {
+  display: block;
+  user-select: none;
+  /* Readable against both the void and a lit body edge. */
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+}
+
+.domain {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.875rem;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.project {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+  color: var(--text-muted);
+  /* Project titles can be long. Wrapping keeps the full title readable and
+     stops it running off a narrow viewport; truncating would hide content.
+     A fixed width rather than max-width, so long titles use the full measure
+     instead of being balanced into a narrow column of single words. */
+  /* Wide enough that the longest title wraps to two lines: the label block is
+     centred on its anchor, so extra lines grow back towards the moon. */
+  width: 10rem;
+  text-align: center;
+}
+
+/* Labels are fixed-size DOM while the system scales down with the viewport, so
+   below this width the project labels no longer fit between their moon and its
+   planet. Domain labels stay — they carry the hierarchy — and Quick View
+   carries every project name in full. Phase 9 owns the wider mobile decision
+   of which bodies to draw at all. */
+@media (max-width: 47.99rem) {
+  .project {
+    display: none;
+  }
+}
