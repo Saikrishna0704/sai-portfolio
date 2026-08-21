@@ -84,6 +84,11 @@ export interface PlanetLayout {
    */
   labelOffset: [number, number, number];
   orbitRadius: number;
+  /**
+   * Starting angle on the orbit. `position` is this angle resolved at rest;
+   * ambient motion advances from here (see `motion.ts`).
+   */
+  orbitAngle: number;
   radius: number;
   color: string;
   moonOrbitRadius: number;
@@ -193,6 +198,7 @@ export function buildSystem(domains: Domain[]): SystemLayout {
       position: onOrbit(orbitRadius, angle),
       labelOffset: [0, meanMoonZ >= 0 ? labelDistance : -labelDistance, 0],
       orbitRadius,
+      orbitAngle: angle,
       radius: WORLD.planetRadius,
       color: DOMAIN_COLORS[domainIndex % DOMAIN_COLORS.length] ?? FALLBACK_COLOR,
       moonOrbitRadius: ringRadius,

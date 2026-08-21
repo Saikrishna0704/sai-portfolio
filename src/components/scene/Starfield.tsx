@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useFrame } from "@react-three/fiber";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+
+import { STARFIELD_DRIFT_SPEED } from "@/scene/motion";
 
 const STAR_COUNT = 1400;
 const INNER_RADIUS = 90;
@@ -22,11 +25,20 @@ function mulberry32(seed: number) {
 /**
  * Background sky: a single points cloud on a distant shell.
  *
- * Deliberately plain — one draw call, no textures, no motion (Phase 3 owns
- * drift). Brightness varies per star so the field reads as depth rather than
- * as uniform noise.
+ * Deliberately plain — one draw call, no textures. Brightness varies per star
+ * so the field reads as depth rather than as uniform noise.
+ *
+ * Drifts far more slowly than anything else in the scene: the sky should read
+ * as the frame the system moves within, not as another moving object.
  */
-export function Starfield() {
+export function Starfield({ reducedMotion }: { reducedMotion: boolean }) {
+  const pointsRef = useRef<THREE.Points>(null);
+
+  useFrame((state) => {
+    if (reducedMotion || !pointsRef.current) return;
+    pointsRef.current.rotation.y = state.clock.elapsedTime * STARFIELD_DRIFT_SPEED;
+  });
+
   const geometry = useMemo(() => {
     const random = mulberry32(20260820);
     const positions = new Float32Array(STAR_COUNT * 3);
@@ -60,7 +72,7 @@ export function Starfield() {
   useEffect(() => () => geometry.dispose(), [geometry]);
 
   return (
-    <points geometry={geometry} frustumCulled={false}>
+    <points ref={pointsRef} geometry={geometry} frustumCulled={false}>
       <pointsMaterial
         // Screen-space size: stars stay crisp points regardless of distance.
         size={1.6}
