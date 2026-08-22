@@ -18,6 +18,8 @@ import { Starfield } from "./Starfield";
 interface SceneCanvasProps {
   selection: Selection;
   activeDomainId: string | null;
+  /** Which body the pointer is on, if any. Labels key off this. */
+  hover: Hover | null;
   /** The scene is scenery behind a reading surface rather than the subject. */
   isBackdrop: boolean;
   onSelect: (next: Selection) => void;
@@ -41,6 +43,7 @@ interface SceneCanvasProps {
 export default function SceneCanvas({
   selection,
   activeDomainId,
+  hover,
   isBackdrop,
   onSelect,
   onHover,
@@ -121,6 +124,7 @@ export default function SceneCanvas({
           planet={planet}
           reducedMotion={reducedMotion}
           activeDomainId={activeDomainId}
+          hover={hover}
           selection={selection}
           onSelect={onSelect}
           onHover={handleHover}

@@ -43,6 +43,28 @@ export function planetAngleAt(
   return planet.orbitAngle + elapsed * orbitAngularSpeed(planet.orbitRadius);
 }
 
+/**
+ * How far a planet's moon fan has swung from where it was laid out.
+ *
+ * Moons are placed around the planet's *initial* outward direction, but the
+ * planet then travels along its orbit. Leaving the fan where it started means
+ * it slowly points somewhere else entirely: with several projects the fan is
+ * wide, and one of its labels eventually swings across the star, where dark
+ * text on a bright surface cannot be read.
+ *
+ * Rotating the fan by this angle keeps it pointing outward for good. Shared by
+ * the planet that draws the moons and the camera that flies to them, for the
+ * same reason `planetAngleAt` is shared: the two must not disagree about where
+ * a moon is, or the camera frames empty space.
+ */
+export function moonFanRotation(
+  planet: PlanetLayout,
+  elapsed: number,
+  reducedMotion: boolean,
+): number {
+  return planetAngleAt(planet, elapsed, reducedMotion) - planet.orbitAngle;
+}
+
 /** Axial spin, radians per second. */
 export const PLANET_SPIN_SPEED = 0.06;
 

@@ -51,6 +51,36 @@ const BASE_ANGLE = 0.6;
 /** Preferred angular gap between sibling moons around their planet. */
 const MOON_SPREAD = 0.9;
 /**
+ * Widest total angle the moon fan may cover, in radians (about 109 degrees).
+ *
+ * Four projects at the preferred gap wrap the fan 155 degrees around the
+ * planet, which puts the end moons close to the camera while the middle ones
+ * sit far from it. A domain view frames the planet from only a few units away,
+ * so that depth difference is enough for perspective to throw the near labels
+ * clear off the side of the screen. Capping the span keeps every moon on the
+ * outward-facing arc, at roughly one depth, where the fit calculation holds.
+ *
+ * Domains with more projects tighten the gap rather than widen the arc, and
+ * `moonRingRadius` then grows the ring to keep them from touching.
+ */
+const MOON_FAN_SPAN = 1.9;
+/**
+ * Extra framing a domain view needs per unit of fan width, as a fraction.
+ *
+ * A domain is framed from only a few world units away, so the fan is not flat
+ * to the camera: the moons at the near end of the arc sit noticeably closer
+ * than those at the far end, and perspective pushes their labels outward on
+ * screen by more than their world radius accounts for. The fit calculation
+ * models the fan as a flat disc, so without this the near label lands past the
+ * bottom of the viewport.
+ *
+ * Empirical rather than derived: the exact magnification depends on the camera
+ * distance, which depends on this radius, so solving it properly means solving
+ * a fixed point. Scaled by the sine of the half-span so a single moon, which
+ * has no depth spread at all, is unaffected.
+ */
+const FAN_PERSPECTIVE_ALLOWANCE = 0.7;
+/**
  * How far past a moon its label sits, along the moon's radial direction.
  * Sized against the label's own pixel width, not just the moon's radius.
  */
@@ -126,7 +156,11 @@ function onOrbit(radius: number, angle: number): [number, number, number] {
  */
 function moonAngularStep(moonCount: number): number {
   if (moonCount < 2) return 0;
-  return Math.min(MOON_SPREAD, (Math.PI * 2) / moonCount);
+  return Math.min(
+    MOON_SPREAD,
+    MOON_FAN_SPAN / (moonCount - 1),
+    (Math.PI * 2) / moonCount,
+  );
 }
 
 /**
@@ -211,7 +245,11 @@ export function buildSystem(domains: Domain[]): SystemLayout {
       color: DOMAIN_COLORS[domainIndex % DOMAIN_COLORS.length] ?? FALLBACK_COLOR,
       moonOrbitRadius: ringRadius,
       focusRadius:
-        moonCount > 0 ? ringRadius + MOON_LABEL_REACH : WORLD.planetRadius * 6,
+        moonCount > 0
+          ? (ringRadius + MOON_LABEL_REACH) *
+            (1 +
+              FAN_PERSPECTIVE_ALLOWANCE * Math.sin((step * (moonCount - 1)) / 2))
+          : WORLD.planetRadius * 6,
       moons,
     } satisfies PlanetLayout;
   });

@@ -5,7 +5,7 @@ import { useRef } from "react";
 import { MathUtils, PerspectiveCamera, Vector3 } from "three";
 
 import { MOON_LABEL_REACH, planets, systemRadius } from "@/scene/layout";
-import { planetAngleAt } from "@/scene/motion";
+import { moonFanRotation, planetAngleAt } from "@/scene/motion";
 import type { Selection } from "@/state/selection";
 
 import { markSceneArrived } from "./arrivalState";
@@ -173,10 +173,16 @@ export function CameraRig({
             (item) => item.projectId === selection.projectId,
           );
           if (moon) {
-            // Moon offsets are fixed in world space (Phase 3), so the moon's
-            // position is just the planet's plus its offset.
-            target.x += moon.position[0];
-            target.z += moon.position[2];
+            // The moon fan rotates with the orbit, so the layout offset has to
+            // be turned by the same angle before it is added. Reading the
+            // static offset instead is what once sent the camera to empty
+            // space when a group rotated underneath it.
+            const fan = moonFanRotation(planet, elapsed, reducedMotion);
+            const cos = Math.cos(fan);
+            const sin = Math.sin(fan);
+            const [dx, , dz] = moon.position;
+            target.x += dx * cos - dz * sin;
+            target.z += dz * cos + dx * sin;
             radius = PROJECT_FRAME_RADIUS;
             verticalExtent = 1;
           }

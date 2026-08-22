@@ -5,7 +5,11 @@ import { useEffect, useMemo, useRef } from "react";
 import { Color, type Group, type Mesh } from "three";
 
 import { MOON_COLOR, type PlanetLayout } from "@/scene/layout";
-import { PLANET_SPIN_SPEED, planetAngleAt } from "@/scene/motion";
+import {
+  moonFanRotation,
+  PLANET_SPIN_SPEED,
+  planetAngleAt,
+} from "@/scene/motion";
 import { createPlanetTexture } from "@/scene/planetTexture";
 import type { Hover, Selection } from "@/state/selection";
 
@@ -32,6 +36,7 @@ interface DomainPlanetProps {
   planet: PlanetLayout;
   reducedMotion: boolean;
   activeDomainId: string | null;
+  hover: Hover | null;
   selection: Selection;
   onSelect: (next: Selection) => void;
   onHover: (next: Hover | null) => void;
@@ -44,26 +49,44 @@ interface DomainPlanetProps {
  * Every planet renders from the same component, so a new domain in the data
  * needs no new scene code.
  *
- * Ambient motion moves the group's *position* along its orbit and leaves the
- * moon offsets untouched. That is how a real system behaves — a moon's orbit
- * does not co-rotate with its planet's revolution — and it is also what keeps
- * the labels honest: the Phase 2 rules pick each label's side from where the
- * moons sit, so a moon that swung around its planet would leave every one of
- * those choices stale and start colliding.
+ * Ambient motion moves the group's *position* along its orbit, and turns the
+ * moon fan by the same angle so it keeps pointing away from the star.
+ *
+ * Leaving the fan fixed was more faithful to real orbital mechanics, where a
+ * moon's orbit does not co-rotate with its planet's revolution. It was worse
+ * to look at: the fan slowly came to point wherever the planet had started, so
+ * a project label eventually crossed the star and turned into dark text on a
+ * bright surface. Legibility wins over accuracy here.
  */
 export function DomainPlanet({
   planet,
   reducedMotion,
   activeDomainId,
+  hover,
   selection,
   onSelect,
   onHover,
 }: DomainPlanetProps) {
   const groupRef = useRef<Group>(null);
   const bodyRef = useRef<Mesh>(null);
+  const moonsRef = useRef<Group>(null);
 
   const isActive = activeDomainId === planet.domainId;
   const isDimmed = activeDomainId !== null && !isActive;
+  /**
+   * Selected, not merely hovered.
+   *
+   * Project labels are fixed-size DOM at a fixed offset, so whether they
+   * collide depends entirely on how the moon fan happens to face the camera.
+   * In a focused view that is settled by construction: the camera sits at
+   * FOCUS_AZIMUTH_OFFSET, which puts the fan side-on and spreads the labels
+   * apart. From the overview the camera is fixed while the planet travels, so
+   * the same fan turns edge-on twice per orbit and every label in it stacks up
+   * in the same few pixels. Hovering a planet therefore emphasises it without
+   * printing its whole project list into the scene.
+   */
+  const isFocused =
+    selection.kind !== "overview" && selection.domainId === planet.domainId;
 
   // Seeded from the domain id so each planet keeps the same face across
   // reloads, and two domains never share one.
@@ -99,6 +122,16 @@ export function DomainPlanet({
       0,
       Math.sin(angle) * planet.orbitRadius,
     );
+
+    // Negated: a three.js rotation about +Y sends a point at orbital angle a to
+    // a - y, and the fan has to advance by the same amount the planet did.
+    if (moonsRef.current) {
+      moonsRef.current.rotation.y = -moonFanRotation(
+        planet,
+        elapsed,
+        reducedMotion,
+      );
+    }
 
     // Legible now that surfaces carry longitudinal mottling. On the untextured
     // spheres this shipped with, the terminator never moved and the spin was
@@ -162,57 +195,67 @@ export function DomainPlanet({
         />
       )}
 
-      {planet.moons.map((moon) => {
-        const isSelectedProject =
-          selection.kind === "project" && selection.projectId === moon.projectId;
+      {/* Rotates with the orbit so the fan keeps pointing outward, away from
+          the star, however far round the planet has travelled. */}
+      <group ref={moonsRef}>
+        {planet.moons.map((moon) => {
+          const isSelectedProject =
+            selection.kind === "project" &&
+            selection.projectId === moon.projectId;
+          // One label at a time is always readable, whatever the phase.
+          const isHoveredMoon = hover?.projectId === moon.projectId;
 
-        return (
-          <group key={moon.projectId} position={moon.position}>
-            <mesh>
-              <sphereGeometry args={[moon.radius, 20, 20]} />
-              <meshStandardMaterial
-                color={moonColor}
-                roughness={0.9}
-                metalness={0}
-                emissive={moonColor}
-                emissiveIntensity={isSelectedProject ? 0.5 : 0}
-              />
-            </mesh>
+          return (
+            <group key={moon.projectId} position={moon.position}>
+              <mesh>
+                <sphereGeometry args={[moon.radius, 20, 20]} />
+                <meshStandardMaterial
+                  color={moonColor}
+                  roughness={0.9}
+                  metalness={0}
+                  emissive={moonColor}
+                  emissiveIntensity={isSelectedProject ? 0.5 : 0}
+                />
+              </mesh>
 
-            <mesh
-              onPointerOver={(event) => {
-                event.stopPropagation();
-                onHover({ domainId: planet.domainId, projectId: moon.projectId });
-              }}
-              onPointerOut={() => onHover(null)}
-              onClick={(event) => {
-                event.stopPropagation();
-                onSelect({
-                  kind: "project",
-                  domainId: planet.domainId,
-                  projectId: moon.projectId,
-                });
-              }}
-            >
-              <sphereGeometry args={[MOON_TARGET_RADIUS, 12, 12]} />
-              <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-            </mesh>
+              <mesh
+                onPointerOver={(event) => {
+                  event.stopPropagation();
+                  onHover({
+                    domainId: planet.domainId,
+                    projectId: moon.projectId,
+                  });
+                }}
+                onPointerOut={() => onHover(null)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onSelect({
+                    kind: "project",
+                    domainId: planet.domainId,
+                    projectId: moon.projectId,
+                  });
+                }}
+              >
+                <sphereGeometry args={[MOON_TARGET_RADIUS, 12, 12]} />
+                <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+              </mesh>
 
-            {/* Progressive disclosure: project labels appear only for the
+              {/* Progressive disclosure: project labels appear only for the
                 domain in focus. Showing every project at once is what made the
                 Phase 2 stress test unreadable, and PROJECT.md §4 asks the
                 overview for minimal labels. */}
-            {isActive && (
-              <BodyLabel
-                text={moon.title}
-                position={moon.labelOffset}
-                variant="project"
-                dimmed={false}
-              />
-            )}
-          </group>
-        );
-      })}
+              {(isFocused || isHoveredMoon || isSelectedProject) && (
+                <BodyLabel
+                  text={moon.title}
+                  position={moon.labelOffset}
+                  variant="project"
+                  dimmed={false}
+                />
+              )}
+            </group>
+          );
+        })}
+      </group>
     </group>
   );
 }

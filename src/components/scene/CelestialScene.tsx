@@ -31,7 +31,8 @@ class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean
 export function CelestialScene() {
   // Read here, outside the Canvas, and hand down as props: R3F renders with
   // its own reconciler, so context is not reliably shared across the boundary.
-  const { selection, activeDomainId, select, setHover } = useSelection();
+  const { selection, hover, activeDomainId, select, setHover } =
+    useSelection();
 
   // Anywhere but the overview, the scene is scenery behind a reading surface.
   const isBackdrop = usePathname() !== "/";
@@ -41,6 +42,7 @@ export function CelestialScene() {
       <SceneCanvas
         selection={selection}
         activeDomainId={activeDomainId}
+        hover={hover}
         isBackdrop={isBackdrop}
         onSelect={select}
         onHover={setHover}
