@@ -399,7 +399,6 @@
   font-size: 0.9375rem;
   line-height: 1.6;
   color: var(--text-muted);
-  max-width: 44rem;
 }
 
 /* What a role actually produced. */
@@ -415,7 +414,19 @@
   font-size: 0.9rem;
   line-height: 1.6;
   color: var(--text-muted);
-  max-width: 46rem;
+}
+
+/* Two columns once the card is wide enough.
+   These were capped at a single readable measure, which left a dead strip down
+   the right of the card on any large screen. Removing the cap alone would run
+   lines to 100-plus characters, so the width is spent on a second column
+   instead: the box fills, and each line stays the length it was. */
+@media (min-width: 64rem) {
+  .highlights {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem 2.25rem;
+  }
 }
 
 .highlights li::marker {
