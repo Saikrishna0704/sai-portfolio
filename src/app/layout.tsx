@@ -25,9 +25,46 @@ const plexMono = IBM_Plex_Mono({
 
 const { person } = portfolioData;
 
+/**
+ * Absolute base for share metadata.
+ *
+ * OpenGraph needs absolute URLs, and the deployment host is not known at
+ * build time. Vercel supplies its own; anything else can set the public one.
+ * No domain is hard-coded, so nothing here silently points at a site that
+ * does not exist yet.
+ */
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
+
+/** "https://x.com/exergyofsai" to "@exergyofsai", rather than writing it twice. */
+const xHandle = `@${person.links.x.replace(/\/$/, "").split("/").pop()}`;
+
 export const metadata: Metadata = {
-  title: `${person.name} · ${person.tagline}`,
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: `${person.name} · ${person.tagline}`,
+    template: `%s · ${person.name}`,
+  },
   description: person.bio,
+  applicationName: person.name,
+  authors: [{ name: person.name, url: person.links.linkedin }],
+  creator: person.name,
+  openGraph: {
+    type: "profile",
+    url: "/",
+    siteName: person.name,
+    title: `${person.name} · ${person.tagline}`,
+    description: person.bio,
+  },
+  twitter: {
+    card: "summary_large_image",
+    creator: xHandle,
+    title: `${person.name} · ${person.tagline}`,
+    description: person.bio,
+  },
 };
 
 export const viewport: Viewport = {

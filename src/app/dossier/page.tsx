@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 
 import { DossierContent } from "@/components/dossier/DossierContent";
-import { portfolioData } from "@/data/portfolio-data";
 
 export const metadata: Metadata = {
-  title: `Dossier · ${portfolioData.person.name}`,
+  // The root layout's title template appends the name.
+  title: "Dossier",
 };
 
 /**
