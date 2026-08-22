@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { portfolioData } from "@/data/portfolio-data";
+import { portfolioData, type Location } from "@/data/portfolio-data";
 import {
   experienceForProject,
   relationsForSkill,
@@ -27,11 +27,26 @@ const MONTHS = [
 ];
 
 /** "2025-03" to "Mar 2025". Parsed by hand rather than through Date, which
- *  would shift a bare year and month across timezones. */
+ *  would shift a bare year and month across timezones. A bare "2018" is passed
+ *  through unchanged: some entries only have the year, and padding one on
+ *  would state more than is known. */
 function formatMonth(value: string): string {
   const [year, month] = value.split("-");
+  if (!month) return value;
   const name = MONTHS[Number(month) - 1];
   return name && year ? `${name} ${year}` : value;
+}
+
+/**
+ * ", Buffalo" after an institution, unless the name already says it.
+ *
+ * "University at Buffalo, Buffalo" reads as a mistake rather than as extra
+ * information, and several institutions carry their city in their name.
+ */
+function placeSuffix(institution: string, location?: Location): string {
+  if (!location) return "";
+  const named = institution.toLowerCase().includes(location.city.toLowerCase());
+  return named ? "" : `, ${location.city}`;
 }
 
 function classes(...values: (string | false | undefined)[]): string {
@@ -47,6 +62,7 @@ export function QuickViewContent() {
     skills,
     funProjects,
     archived,
+    certifications,
   } = portfolioData;
 
   const [activeSkillId, setActiveSkillId] = useState<string | null>(null);
@@ -111,8 +127,18 @@ export function QuickViewContent() {
                     {entry.end ? formatMonth(entry.end) : "Present"}
                   </p>
                 </div>
-                <p className={styles.entryInstitution}>{entry.institution}</p>
+                <p className={styles.entryInstitution}>
+                  {entry.institution}
+                  {placeSuffix(entry.institution, entry.location)}
+                </p>
                 <p className={styles.projectSummary}>{entry.summary}</p>
+                {entry.highlights && entry.highlights.length > 0 && (
+                  <ul className={styles.highlights}>
+                    {entry.highlights.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                )}
               </li>
             ))}
           </ul>
@@ -130,8 +156,17 @@ export function QuickViewContent() {
                 key={`${entry.institution}-${entry.degree}`}
                 className={styles.entry}
               >
-                <h3 className={styles.entryTitle}>{entry.degree}</h3>
-                <p className={styles.entryInstitution}>{entry.institution}</p>
+                <div className={styles.entryHead}>
+                  <h3 className={styles.entryTitle}>{entry.degree}</h3>
+                  <p className={styles.entryMeta}>
+                    {formatMonth(entry.start)} to{" "}
+                    {entry.end ? formatMonth(entry.end) : "Present"}
+                  </p>
+                </div>
+                <p className={styles.entryInstitution}>
+                  {entry.institution}
+                  {placeSuffix(entry.institution, entry.location)}
+                </p>
               </li>
             ))}
           </ul>
@@ -164,14 +199,22 @@ export function QuickViewContent() {
                       isProjectMuted(project.id) && styles.muted,
                     )}
                   >
-                    <a
-                      className={styles.projectTitle}
-                      href={project.url}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {project.title}
-                    </a>
+                    {/* A project with no link yet is still a project: it shows
+                        as plain text rather than a dead anchor. */}
+                    {project.url ? (
+                      <a
+                        className={styles.projectTitle}
+                        href={project.url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {project.title}
+                      </a>
+                    ) : (
+                      <span className={styles.projectTitle}>
+                        {project.title}
+                      </span>
+                    )}
                     <p className={styles.projectSummary}>{project.summary}</p>
                     <ProjectMeta projectId={project.id} />
                   </li>
@@ -279,6 +322,30 @@ export function QuickViewContent() {
                 </a>
                 <p className={styles.archivedMeta}>{item.year}</p>
                 <p className={styles.archivedSummary}>{item.summary}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {certifications.length > 0 && (
+        <section className={styles.section} aria-labelledby="certifications">
+          <h2 id="certifications" className={styles.heading}>
+            Certifications
+          </h2>
+          {/* Last section on the page, deliberately. Real and verifiable, but
+              not something to lead with. */}
+          <ul className={styles.certifications}>
+            {certifications.map((item) => (
+              <li key={item.url}>
+                <a
+                  className={styles.certification}
+                  href={item.url}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {item.name}
+                </a>
               </li>
             ))}
           </ul>

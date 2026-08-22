@@ -72,14 +72,16 @@ export function SelectionPanel() {
                       </span>
                     ))}
                   </p>
-                  <a
-                    className={styles.link}
-                    href={item.url}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Open ↗
-                  </a>
+                  {item.url && (
+                    <a
+                      className={styles.link}
+                      href={item.url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open ↗
+                    </a>
+                  )}
                 </>
               )}
             </li>

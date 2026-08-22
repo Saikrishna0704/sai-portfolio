@@ -9,7 +9,8 @@ export interface Project {
   title: string;
   type: ProjectType;
   summary: string;
-  url: string;
+  /** Omitted while a project has nowhere public to point at yet. */
+  url?: string;
   technologies: string[]; // skill ids, see `skills` below
 }
 
@@ -26,13 +27,30 @@ export interface Skill {
   name: string;
 }
 
+/**
+ * Where something happened.
+ *
+ * Content, not presentation: the city is a fact about the role or the degree.
+ * Optional because not every entry has a meaningful place, and because an
+ * unknown location must stay absent rather than be guessed at.
+ */
+export interface Location {
+  city: string;
+  region: string;
+  country: string;
+}
+
 export interface ExperienceEntry {
   id: string;
   role: string;
   institution: string;
+  location?: Location;
   start: string; // YYYY-MM
   end: string | null; // null = ongoing
+  /** One line, for the overview. The detail lives in `highlights`. */
   summary: string;
+  /** What was actually built, in the role's own terms. */
+  highlights?: string[];
   /** Project ids this role produced or contributed to. */
   relatedProjects: string[];
 }
@@ -40,8 +58,11 @@ export interface ExperienceEntry {
 export interface EducationEntry {
   degree: string;
   institution: string;
-  // No dates: none were supplied, and a graduation year is not something to
-  // guess at on someone's behalf. Add `start`/`end` here when they are known.
+  location?: Location;
+  /** YYYY-MM, or bare YYYY when only the year is known. */
+  start: string;
+  /** YYYY-MM or YYYY; null = ongoing. */
+  end: string | null;
 }
 
 export interface ArchivedObject {
@@ -51,6 +72,15 @@ export interface ArchivedObject {
   url: string;
   year: number;
   note: string; // why this is archived/corner rather than a main domain
+}
+
+/**
+ * Deliberately minor. Kept because they are real and verifiable, shown in a
+ * corner rather than given weight the work itself has earned.
+ */
+export interface Certification {
+  name: string;
+  url: string;
 }
 
 export interface Person {
@@ -80,16 +110,20 @@ export interface PortfolioData {
    */
   funProjects: Project[];
   archived: ArchivedObject[];
+  certifications: Certification[];
 }
 
 export const skills: Skill[] = [
   { id: "python", name: "Python" },
   { id: "pytorch", name: "PyTorch" },
+  { id: "ml", name: "Machine learning" },
+  { id: "multimodal", name: "Multimodal AI" },
+  { id: "rag", name: "RAG" },
+  { id: "fine-tuning", name: "Fine-tuning" },
+  { id: "llm-evaluation", name: "LLM evaluation" },
   { id: "triton", name: "Triton" },
   { id: "kernels", name: "GPU kernels" },
   { id: "sql", name: "SQL" },
-  { id: "data-engineering", name: "Data engineering" },
-  { id: "ml", name: "Machine learning" },
 ];
 
 export const portfolioData: PortfolioData = {
@@ -110,17 +144,38 @@ export const portfolioData: PortfolioData = {
   domains: [
     {
       id: "llms",
-      name: "LLMs",
-      description: "Building language models from the ground up to understand what's actually happening inside them.",
-      relatedSkills: ["python", "pytorch"],
+      name: "AI/LLMs",
+      description: "Language models end to end: building them from scratch, adapting them to a task, and measuring whether any of it worked.",
+      relatedSkills: ["python", "pytorch", "fine-tuning", "llm-evaluation"],
       projects: [
         {
           id: "llm-from-scratch",
           title: "llm-from-scratch",
           type: "code",
-          summary: "A 128M-parameter language model built from scratch to understand the transformer layer and everything around it: attention, positional encoding, training loop, end to end.",
+          summary: "A 124M-parameter language model built from scratch to understand the transformer layer and everything around it: token and positional embeddings, multi-head attention, KV cache, training loop, end to end.",
           url: "https://github.com/Saikrishna0704/llm-from-scratch",
           technologies: ["python", "pytorch"],
+        },
+        {
+          id: "qlora-finetuning",
+          title: "LLM fine-tuning with QLoRA",
+          type: "code",
+          summary: "Fine-tuned Llama 3.2 3B with 4-bit QLoRA and rank-16 adapters, about 1% of parameters trainable, raising intent-classification macro-F1 from 0.71 to 0.89 on a held-out support-ticket set while cutting GPU memory by about 60% to fit a single T4.",
+          technologies: ["python", "pytorch", "fine-tuning"],
+        },
+        {
+          id: "genai-eval-harness",
+          title: "GenAI evaluation and guardrails harness",
+          type: "code",
+          summary: "A reusable harness scoring groundedness, relevance, and hallucination across 4 models and 3 prompt variants, logging p95 latency and cost per query, with PII redaction at 96% recall and prompt-injection detection at 89%.",
+          technologies: ["python", "llm-evaluation"],
+        },
+        {
+          id: "telugu-tokenizer",
+          title: "Telugu subword tokenizer",
+          type: "code",
+          summary: "A byte pair encoding tokenizer for Telugu with its own encoder and decoder, reaching a compression ratio of 6.",
+          technologies: ["python"],
         },
       ],
     },
@@ -142,9 +197,9 @@ export const portfolioData: PortfolioData = {
     },
     {
       id: "applied-ml-research",
-      name: "Applied ML research",
+      name: "Research",
       description: "Published research applying ML and multimodal models to real-world interpretation problems.",
-      relatedSkills: ["python", "ml", "sql", "data-engineering"],
+      relatedSkills: ["python", "ml", "multimodal", "rag", "sql"],
       projects: [
         {
           id: "synthetic-reflections",
@@ -152,7 +207,7 @@ export const portfolioData: PortfolioData = {
           type: "paper",
           summary: "Applies multimodal LLMs and retrieval-augmented generation to interpret Sentinel-2 satellite imagery of industrial mining sites, introducing a new landscape descriptor for assessing mining activity. Published at HCII 2026.",
           url: "https://doi.org/10.1007/978-3-032-30038-6_27",
-          technologies: ["ml", "python"],
+          technologies: ["python", "ml", "multimodal", "rag"],
         },
       ],
     },
@@ -163,23 +218,63 @@ export const portfolioData: PortfolioData = {
   experience: [
     {
       id: "ub-gra",
-      role: "Graduate Research Assistant",
+      role: "Graduate Research Assistant, Generative AI",
+      // Kept as "University at Buffalo" to match the education entry. The
+      // formal name is State University of New York at Buffalo; using both
+      // across two adjacent sections reads as an inconsistency rather than
+      // as precision.
       institution: "University at Buffalo",
+      location: { city: "Buffalo", region: "New York", country: "United States" },
       start: "2025-03",
       end: "2026-01",
-      summary: "Contributed to research on multimodal LLM and RAG pipelines for satellite imagery interpretation, published at HCII 2026.",
+      summary: "First-authored an end to end multimodal GenAI pipeline interpreting surface mining environmental impact from Sentinel-2 satellite imagery, published at HCI International 2026.",
+      highlights: [
+        "First-authored “Synthetic Reflections on Resource Extraction”, published at HCI International 2026: an end to end multimodal GenAI pipeline interpreting surface mining environmental impact from Sentinel-2 satellite imagery.",
+        "Developed a multimodal LLM inference workflow in Python, applying prompt engineering and few-shot prompting to control and optimize outputs from Llama 4, evaluating caption quality using custom domain metrics.",
+        "Built an automated evaluation pipeline for multimodal outputs using LLM-as-judge (Gemini), RAGAS, and synthetic test prompts, enforcing schema-validated structured JSON responses to validate scoring logic and evaluation consistency.",
+        "Engineered a multi-source agentic RAG system with multi-step reasoning and coarse-to-fine retrieval, integrating satellite image caption embeddings with mine impact reports to enable grounded Q&A across visual and document evidence.",
+      ],
       // The role and the paper are the same piece of work: both describe the
       // multimodal LLM and RAG pipeline published at HCII 2026.
       relatedProjects: ["synthetic-reflections"],
     },
+    {
+      id: "merilytics-mle-intern",
+      role: "Machine Learning Engineer Intern",
+      institution: "Merilytics",
+      location: { city: "Hyderabad", region: "Telangana", country: "India" },
+      start: "2022-03",
+      end: "2022-07",
+      summary: "Built and productionized ranking, recommendation, and churn models, along with the evaluation frameworks used to decide which of them shipped.",
+      highlights: [
+        "Designed and productionized a personalized ranking and recommendation system using LambdaMART and contextual multi-armed bandits on user-item interactions, improving precision@k by 12% and retention by 7%.",
+        "Built an evaluation framework for recommendation and search models using NDCG@10, MRR, hit-rate@k, A/B tests, and user feedback loops to prioritize algorithm updates, raising NDCG@10 by 19%.",
+        "Built an ML pipeline with classification, regression, and clustering models to predict user churn risk and lifetime value from behavioral and transactional data, driving 14% upsell conversions in targeted retention campaigns.",
+        "Built a semantic search assistant over the product catalog using sentence-embedding retrieval, cutting query resolution time by 32% while lifting self-service containment by 18%.",
+      ],
+      relatedProjects: [],
+    },
   ],
 
+  // Most recent first, matching how `experience` reads.
   education: [
     {
-      // Kept as supplied — "Masters in Data Science" rather than MS or MPS,
-      // since Buffalo offers both and the exact credential was not specified.
-      degree: "Masters in Data Science",
+      degree: "Master of Science in Data Science",
       institution: "University at Buffalo",
+      location: { city: "Buffalo", region: "New York", country: "United States" },
+      start: "2023-08",
+      end: "2025-01",
+    },
+    {
+      // Institution kept as the acronym supplied rather than expanded, and the
+      // AI track kept in the degree title because it is part of the credential.
+      degree: "Bachelors in Mechanical Engineering with Artificial Intelligence Track",
+      institution: "VNR VJIET",
+      location: { city: "Hyderabad", region: "Telangana", country: "India" },
+      // Years only: the months were not supplied, and a start month is not
+      // something to infer from a typical academic calendar.
+      start: "2018",
+      end: "2022",
     },
   ],
 
@@ -214,6 +309,17 @@ export const portfolioData: PortfolioData = {
       url: "https://doi.org/10.1007/978-981-16-7389-4_34",
       year: 2022,
       note: "Early undergraduate work, unrelated to current LLM/inference focus. Kept as a small, unlabeled corner object rather than a main domain.",
+    },
+  ],
+
+  certifications: [
+    {
+      name: "ML in Production",
+      url: "https://www.coursera.org/account/accomplishments/verify/OZGXPAW5Y1TL",
+    },
+    {
+      name: "Python for Data Structures",
+      url: "https://www.coursera.org/account/accomplishments/certificate/WQRBAPGTP99H",
     },
   ],
 };
