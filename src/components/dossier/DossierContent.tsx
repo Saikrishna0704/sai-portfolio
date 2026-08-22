@@ -10,7 +10,9 @@ import {
   type ReactNode,
 } from "react";
 
+import { LocationView } from "@/components/globe/LocationView";
 import { portfolioData, type Location } from "@/data/portfolio-data";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import {
   experienceForProject,
   relationsForSkill,
@@ -235,6 +237,13 @@ export function DossierContent() {
   } = portfolioData;
 
   const [activeSkillId, setActiveSkillId] = useState<string | null>(null);
+  // One at a time: each open globe is its own WebGL context, and there is no
+  // reason to hold several places on screen at once.
+  const [openPlaceId, setOpenPlaceId] = useState<string | null>(null);
+  const reducedMotion = usePrefersReducedMotion();
+
+  const togglePlace = (id: string) =>
+    setOpenPlaceId((current) => (current === id ? null : id));
 
   const active = useMemo(() => {
     if (!activeSkillId) return null;
@@ -398,6 +407,15 @@ export function DossierContent() {
                     {entry.institution}
                     {placeSuffix(entry.institution, entry.location)}
                   </p>
+                  {entry.location && (
+                    <LocationView
+                      id={entry.id}
+                      location={entry.location}
+                      open={openPlaceId === entry.id}
+                      reducedMotion={reducedMotion}
+                      onToggle={() => togglePlace(entry.id)}
+                    />
+                  )}
                   <p className={styles.cardSummary}>{entry.summary}</p>
                   {entry.highlights && entry.highlights.length > 0 && (
                     <ul className={styles.highlights}>
@@ -415,25 +433,37 @@ export function DossierContent() {
         {education.length > 0 && (
           <Panel {...panelFor("education")}>
             <ul className={styles.deck}>
-              {education.map((entry, index) => (
-                <li
-                  key={`${entry.institution}-${entry.degree}`}
-                  style={stackIndex(index)}
-                  className={styles.card}
-                >
-                  <div className={styles.cardHead}>
-                    <h3 className={styles.cardTitle}>{entry.degree}</h3>
-                    <p className={styles.cardMeta}>
-                      {formatMonth(entry.start)} to{" "}
-                      {entry.end ? formatMonth(entry.end) : "Present"}
+              {education.map((entry, index) => {
+                const placeId = `${entry.institution}-${entry.degree}`;
+                return (
+                  <li
+                    key={placeId}
+                    style={stackIndex(index)}
+                    className={styles.card}
+                  >
+                    <div className={styles.cardHead}>
+                      <h3 className={styles.cardTitle}>{entry.degree}</h3>
+                      <p className={styles.cardMeta}>
+                        {formatMonth(entry.start)} to{" "}
+                        {entry.end ? formatMonth(entry.end) : "Present"}
+                      </p>
+                    </div>
+                    <p className={styles.cardSource}>
+                      {entry.institution}
+                      {placeSuffix(entry.institution, entry.location)}
                     </p>
-                  </div>
-                  <p className={styles.cardSource}>
-                    {entry.institution}
-                    {placeSuffix(entry.institution, entry.location)}
-                  </p>
-                </li>
-              ))}
+                    {entry.location && (
+                      <LocationView
+                        id={placeId}
+                        location={entry.location}
+                        open={openPlaceId === placeId}
+                        reducedMotion={reducedMotion}
+                        onToggle={() => togglePlace(placeId)}
+                      />
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </Panel>
         )}

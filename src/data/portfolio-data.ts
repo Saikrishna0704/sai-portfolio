@@ -38,6 +38,10 @@ export interface Location {
   city: string;
   region: string;
   country: string;
+  /** Degrees north, negative for south. */
+  lat: number;
+  /** Degrees east, negative for west. */
+  lon: number;
 }
 
 export interface ExperienceEntry {
@@ -145,14 +149,16 @@ export const portfolioData: PortfolioData = {
     {
       id: "llms",
       name: "AI/LLMs",
-      description: "Language models end to end: building them from scratch, adapting them to a task, and measuring whether any of it worked.",
+      description:
+        "Language models end to end: building them from scratch, adapting them to a task, and measuring whether any of it worked.",
       relatedSkills: ["python", "pytorch", "fine-tuning", "llm-evaluation"],
       projects: [
         {
           id: "llm-from-scratch",
           title: "llm-from-scratch",
           type: "code",
-          summary: "A 124M-parameter language model built from scratch to understand the transformer layer and everything around it: token and positional embeddings, multi-head attention, KV cache, training loop, end to end.",
+          summary:
+            "A 124M-parameter language model built from scratch to understand the transformer layer and everything around it: token and positional embeddings, multi-head attention, KV cache, training loop, end to end.",
           url: "https://github.com/Saikrishna0704/llm-from-scratch",
           technologies: ["python", "pytorch"],
         },
@@ -160,21 +166,24 @@ export const portfolioData: PortfolioData = {
           id: "qlora-finetuning",
           title: "LLM fine-tuning with QLoRA",
           type: "code",
-          summary: "Fine-tuned Llama 3.2 3B with 4-bit QLoRA and rank-16 adapters, about 1% of parameters trainable, raising intent-classification macro-F1 from 0.71 to 0.89 on a held-out support-ticket set while cutting GPU memory by about 60% to fit a single T4.",
+          summary:
+            "Fine-tuned Llama 3.2 3B with 4-bit QLoRA and rank-16 adapters, about 1% of parameters trainable, raising intent-classification macro-F1 from 0.71 to 0.89 on a held-out support-ticket set while cutting GPU memory by about 60% to fit a single T4.",
           technologies: ["python", "pytorch", "fine-tuning"],
         },
         {
           id: "genai-eval-harness",
           title: "GenAI evaluation and guardrails harness",
           type: "code",
-          summary: "A reusable harness scoring groundedness, relevance, and hallucination across 4 models and 3 prompt variants, logging p95 latency and cost per query, with PII redaction at 96% recall and prompt-injection detection at 89%.",
+          summary:
+            "A reusable harness scoring groundedness, relevance, and hallucination across 4 models and 3 prompt variants, logging p95 latency and cost per query, with PII redaction at 96% recall and prompt-injection detection at 89%.",
           technologies: ["python", "llm-evaluation"],
         },
         {
           id: "telugu-tokenizer",
           title: "Telugu subword tokenizer",
           type: "code",
-          summary: "A byte pair encoding tokenizer for Telugu with its own encoder and decoder, reaching a compression ratio of 6.",
+          summary:
+            "A byte pair encoding tokenizer for Telugu with its own encoder and decoder, reaching a compression ratio of 6.",
           technologies: ["python"],
         },
       ],
@@ -182,14 +191,16 @@ export const portfolioData: PortfolioData = {
     {
       id: "inference",
       name: "Inference",
-      description: "How LLMs actually run once they're trained: the systems side of serving them fast.",
+      description:
+        "How LLMs actually run once they're trained: the systems side of serving them fast.",
       relatedSkills: ["python", "triton", "kernels"],
       projects: [
         {
           id: "prefill-vs-decode",
           title: "Prefill vs decode",
           type: "writing",
-          summary: "A breakdown of the prefill and decode phases in LLM inference and why they behave so differently in practice.",
+          summary:
+            "A breakdown of the prefill and decode phases in LLM inference and why they behave so differently in practice.",
           url: "https://saikrishna0704.github.io/posts/prefill-vs-decode/",
           technologies: ["python"],
         },
@@ -198,14 +209,16 @@ export const portfolioData: PortfolioData = {
     {
       id: "applied-ml-research",
       name: "Research",
-      description: "Published research applying ML and multimodal models to real-world interpretation problems.",
+      description:
+        "Published research applying ML and multimodal models to real-world interpretation problems.",
       relatedSkills: ["python", "ml", "multimodal", "rag", "sql"],
       projects: [
         {
           id: "synthetic-reflections",
           title: "Synthetic Reflections on Resource Extraction",
           type: "paper",
-          summary: "Applies multimodal LLMs and retrieval-augmented generation to interpret Sentinel-2 satellite imagery of industrial mining sites, introducing a new landscape descriptor for assessing mining activity. Published at HCII 2026.",
+          summary:
+            "Applies multimodal LLMs and retrieval-augmented generation to interpret Sentinel-2 satellite imagery of industrial mining sites, introducing a new landscape descriptor for assessing mining activity. Published at HCII 2026.",
           url: "https://doi.org/10.1007/978-3-032-30038-6_27",
           technologies: ["python", "ml", "multimodal", "rag"],
         },
@@ -224,10 +237,17 @@ export const portfolioData: PortfolioData = {
       // across two adjacent sections reads as an inconsistency rather than
       // as precision.
       institution: "University at Buffalo",
-      location: { city: "Buffalo", region: "New York", country: "United States" },
+      location: {
+        city: "Buffalo",
+        region: "New York",
+        country: "United States",
+        lat: 42.8864,
+        lon: -78.8784,
+      },
       start: "2025-03",
       end: "2026-01",
-      summary: "First-authored an end to end multimodal GenAI pipeline interpreting surface mining environmental impact from Sentinel-2 satellite imagery, published at HCI International 2026.",
+      summary:
+        "First-authored an end to end multimodal GenAI pipeline interpreting surface mining environmental impact from Sentinel-2 satellite imagery, published at HCI International 2026.",
       highlights: [
         "First-authored “Synthetic Reflections on Resource Extraction”, published at HCI International 2026: an end to end multimodal GenAI pipeline interpreting surface mining environmental impact from Sentinel-2 satellite imagery.",
         "Developed a multimodal LLM inference workflow in Python, applying prompt engineering and few-shot prompting to control and optimize outputs from Llama 4, evaluating caption quality using custom domain metrics.",
@@ -242,10 +262,17 @@ export const portfolioData: PortfolioData = {
       id: "merilytics-mle-intern",
       role: "Machine Learning Engineer Intern",
       institution: "Merilytics",
-      location: { city: "Hyderabad", region: "Telangana", country: "India" },
+      location: {
+        city: "Hyderabad",
+        region: "Telangana",
+        country: "India",
+        lat: 17.385,
+        lon: 78.4867,
+      },
       start: "2022-03",
       end: "2022-07",
-      summary: "Built and productionized ranking, recommendation, and churn models, along with the evaluation frameworks used to decide which of them shipped.",
+      summary:
+        "Built and productionized ranking, recommendation, and churn models, along with the evaluation frameworks used to decide which of them shipped.",
       highlights: [
         "Designed and productionized a personalized ranking and recommendation system using LambdaMART and contextual multi-armed bandits on user-item interactions, improving precision@k by 12% and retention by 7%.",
         "Built an evaluation framework for recommendation and search models using NDCG@10, MRR, hit-rate@k, A/B tests, and user feedback loops to prioritize algorithm updates, raising NDCG@10 by 19%.",
@@ -261,16 +288,29 @@ export const portfolioData: PortfolioData = {
     {
       degree: "Master of Science in Data Science",
       institution: "University at Buffalo",
-      location: { city: "Buffalo", region: "New York", country: "United States" },
+      location: {
+        city: "Buffalo",
+        region: "New York",
+        country: "United States",
+        lat: 42.8864,
+        lon: -78.8784,
+      },
       start: "2023-08",
       end: "2025-01",
     },
     {
       // Institution kept as the acronym supplied rather than expanded, and the
       // AI track kept in the degree title because it is part of the credential.
-      degree: "Bachelors in Mechanical Engineering with Artificial Intelligence Track",
+      degree:
+        "Bachelors in Mechanical Engineering with Artificial Intelligence Track",
       institution: "VNR VJIET",
-      location: { city: "Hyderabad", region: "Telangana", country: "India" },
+      location: {
+        city: "Hyderabad",
+        region: "Telangana",
+        country: "India",
+        lat: 17.385,
+        lon: 78.4867,
+      },
       // Years only: the months were not supplied, and a start month is not
       // something to infer from a typical academic calendar.
       start: "2018",
@@ -304,8 +344,10 @@ export const portfolioData: PortfolioData = {
   archived: [
     {
       id: "hazardous-asteroid-ml",
-      title: "Predicting the Potentially Hazardous Asteroid to Earth Using Machine Learning",
-      summary: "Undergraduate research comparing machine learning and ensemble methods to classify near-Earth asteroids as hazardous, using NASA JPL's small-body dataset.",
+      title:
+        "Predicting the Potentially Hazardous Asteroid to Earth Using Machine Learning",
+      summary:
+        "Undergraduate research comparing machine learning and ensemble methods to classify near-Earth asteroids as hazardous, using NASA JPL's small-body dataset.",
       url: "https://doi.org/10.1007/978-981-16-7389-4_34",
       year: 2022,
       note: "Early undergraduate work, unrelated to current LLM/inference focus. Kept as a small, unlabeled corner object rather than a main domain.",

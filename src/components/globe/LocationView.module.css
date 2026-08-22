@@ -1,0 +1,81 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  align-self: flex-start;
+  /* The same 44px target every other control in the project carries. */
+  min-height: 44px;
+  padding: 0.3rem 0.75rem 0.3rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    color 160ms var(--ease-out),
+    border-color 160ms var(--ease-out),
+    background-color 160ms var(--ease-out);
+}
+
+.toggle:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+.toggle[aria-expanded="true"] {
+  border-color: rgba(232, 163, 75, 0.45);
+  background: rgba(232, 163, 75, 0.06);
+  color: var(--text);
+}
+
+/* The marker, echoed at text size so the control and the globe agree. */
+.pin {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e8a34b;
+  flex: none;
+}
+
+.label {
+  text-align: left;
+}
+
+.hint {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.75rem 0;
+}
+
+/* Square, so the sphere never distorts with the column width. */
+.globe {
+  position: relative;
+  width: 100%;
+  max-width: 17rem;
+  aspect-ratio: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toggle {
+    transition: none;
+  }
+}
