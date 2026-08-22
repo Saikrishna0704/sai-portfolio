@@ -21,7 +21,7 @@ interface BodyLabelProps {
  * framed small on a narrow viewport, where the bodies themselves shrink.
  *
  * The whole scene layer is `aria-hidden`, so these are the visual echo of the
- * domain and project names; Quick View carries them for assistive technology.
+ * domain and project names; the Dossier carries them for assistive technology.
  *
  * They wait out the opening approach. Being a fixed pixel size is what keeps
  * them legible once the system is framed, but it also means that with the

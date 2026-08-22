@@ -80,7 +80,7 @@ export default function SceneCanvas({
         opacity: hasDrawn ? 1 : 0,
         transition: reducedMotion ? "none" : "opacity 900ms ease-out",
       }}
-      /* Measured: on Quick View the scene was still drawing 25 calls and 19k
+      /* Measured: on the Dossier the scene was still drawing 25 calls and 19k
          triangles every frame from behind a near-opaque scrim. "demand" rather
          than "never" so a resize still repaints once, which is the failure the
          Phase 0 experiment with demand mode was worried about. */

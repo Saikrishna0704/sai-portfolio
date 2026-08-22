@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 
-import { QuickViewContent } from "@/components/quick-view/QuickViewContent";
+import { DossierContent } from "@/components/dossier/DossierContent";
 import { portfolioData } from "@/data/portfolio-data";
 
 export const metadata: Metadata = {
-  title: `Quick View · ${portfolioData.person.name}`,
+  title: `Dossier · ${portfolioData.person.name}`,
 };
 
 /**
@@ -12,6 +12,6 @@ export const metadata: Metadata = {
  * body is a client component because selecting a skill to see where it appears
  * is interactive state.
  */
-export default function QuickViewPage() {
-  return <QuickViewContent />;
+export default function DossierPage() {
+  return <DossierContent />;
 }

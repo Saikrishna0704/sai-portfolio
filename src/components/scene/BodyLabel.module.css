@@ -48,7 +48,7 @@
 
 /* Labels are fixed-size DOM while the system scales down with the viewport, so
    below this width the project labels no longer fit between their moon and its
-   planet. Domain labels stay — they carry the hierarchy — and Quick View
+   planet. Domain labels stay — they carry the hierarchy — and the Dossier
    carries every project name in full. Phase 9 owns the wider mobile decision
    of which bodies to draw at all. */
 @media (max-width: 47.99rem) {

@@ -1,0 +1,629 @@
+/* The Dossier — the conventional HTML view, first-class rather than a fallback
+   (PROJECT.md §7).
+
+   The old layout pinned the text into a 42rem column on the left and cleared a
+   gradient to the right so the system stayed visible. It kept the scene, but it
+   read as a narrow document abandoned at one edge of a wide screen.
+
+   This version takes the full width and keeps the scene by making the surfaces
+   themselves translucent instead: a flat dim over the whole viewport, with
+   panels sitting on it at around three quarters opacity, so the star system is
+   a faint field behind and between the nodes rather than a strip beside them. */
+.page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgba(4, 6, 11, 0.87);
+  /* Still seals the scene off from the pointer. The Dossier is a reading
+     surface, and the domain navigation that would make a selection meaningful
+     only exists on the Explore view. */
+  pointer-events: auto;
+}
+
+.page {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  width: 100%;
+  max-width: 78rem;
+  margin: 0 auto;
+  padding: 3rem var(--gutter) 6rem;
+  pointer-events: auto;
+}
+
+@media (min-width: 64rem) {
+  .page {
+    grid-template-columns: 8.5rem minmax(0, 1fr);
+    gap: 0 2rem;
+    align-items: start;
+  }
+}
+
+/* ---------- Travel rail ---------- */
+
+.rail {
+  display: none;
+}
+
+@media (min-width: 64rem) {
+  .rail {
+    display: block;
+    position: sticky;
+    top: calc(var(--header-height) + 2.5rem);
+  }
+}
+
+.railList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  /* The rail's own thread, the same figure the panels are strung on. */
+  border-left: 1px solid var(--line);
+  padding-left: 0.9rem;
+}
+
+.railNode {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  text-decoration: none;
+  transition: color 180ms var(--ease-out);
+}
+
+.railDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  margin-left: -1.15rem;
+  box-shadow: 0 0 0 4px rgba(4, 6, 11, 0.9);
+  transition:
+    background-color 180ms var(--ease-out),
+    box-shadow 180ms var(--ease-out),
+    transform 180ms var(--ease-out);
+}
+
+.railNode:hover {
+  color: var(--text-muted);
+}
+
+.railNodeActive {
+  color: var(--text);
+}
+
+.railNodeActive .railDot {
+  background: var(--accent);
+  transform: scale(1.5);
+  box-shadow:
+    0 0 0 4px rgba(4, 6, 11, 0.9),
+    0 0 12px 2px rgba(185, 212, 255, 0.35);
+}
+
+/* A selected skill lights every node it reaches. */
+.railNodeLit {
+  color: var(--accent);
+}
+
+.railNodeLit .railDot {
+  background: var(--accent);
+}
+
+/* ---------- The stream of nodes ---------- */
+
+.stream {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+  /* Room for the chain that links the panels. */
+  padding-left: 1.75rem;
+}
+
+@media (min-width: 48rem) {
+  .stream {
+    padding-left: 2.25rem;
+  }
+}
+
+.masthead {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.kicker {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.name {
+  font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+.tagline {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* ---------- Panels: the nodes ---------- */
+
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.6rem 1.5rem 1.75rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  /* Translucent so the system shows through, opaque enough that body text
+     never sits on a moving starfield. */
+  background: rgba(9, 13, 22, 0.76);
+  /* Reveal state. Wrapped until reached, unwrapped once it is. */
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 620ms var(--ease-out),
+    transform 620ms var(--ease-out),
+    border-color 220ms var(--ease-out),
+    box-shadow 220ms var(--ease-out);
+}
+
+.panelOpen {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* The chain. A hairline running up the left gutter to the node above, and a
+   dot marking this node's place on it. Together they make the page a figure of
+   linked points rather than a stack of boxes. */
+.panel::before {
+  content: "";
+  position: absolute;
+  left: -1.75rem;
+  /* Runs the full height of the panel and across the gap above it, so the
+     thread is unbroken from the first node to the last rather than restarting
+     at every panel. */
+  top: -1.5rem;
+  bottom: 0;
+  width: 1px;
+  background: var(--line);
+  transition: background-color 220ms var(--ease-out);
+}
+
+.panel::after {
+  content: "";
+  position: absolute;
+  left: calc(-1.75rem - 3px);
+  /* Beside the heading, not at the panel's midpoint: on a tall section the
+     midpoint is nowhere near anything the node is supposed to mark. */
+  top: 1.55rem;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--deep);
+  border: 1px solid var(--line-strong);
+  transition:
+    background-color 220ms var(--ease-out),
+    border-color 220ms var(--ease-out),
+    box-shadow 220ms var(--ease-out);
+}
+
+@media (min-width: 48rem) {
+  .panel::before {
+    left: -2.25rem;
+  }
+  .panel::after {
+    left: calc(-2.25rem - 3px);
+  }
+}
+
+/* Nothing precedes the first node, so its thread begins at its own dot. */
+.panelFirst::before {
+  top: 1.85rem;
+}
+
+/* Lifts off the page. Kept to a few pixels and a hairline change: PROJECT.md
+   §8 asks for restrained highlights, and a big shadow on a dark ground reads
+   as murk rather than elevation. */
+.panel:hover {
+  border-color: var(--line-strong);
+  box-shadow:
+    0 18px 44px -28px rgba(0, 0, 0, 0.95),
+    inset 0 1px 0 0 rgba(214, 226, 245, 0.04);
+}
+
+.panelOpen:hover {
+  transform: translateY(-4px);
+}
+
+/* A selected skill reaches this node: the dot and its incoming thread light. */
+.panelLit::after {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px 2px rgba(185, 212, 255, 0.35);
+}
+
+.panelLit::before {
+  background: var(--accent-soft);
+}
+
+.panelLit {
+  border-color: rgba(185, 212, 255, 0.25);
+}
+
+.panelHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.heading {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.index {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.indexTotal {
+  color: var(--text-faint);
+}
+
+.note {
+  font-size: 0.8125rem;
+  color: var(--text-faint);
+  max-width: 42rem;
+}
+
+.panelBody {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bio {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  max-width: 42rem;
+}
+
+/* ---------- Decks: sub-items that fan open ---------- */
+
+.deck {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.1rem 1.15rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: rgba(13, 19, 30, 0.6);
+  /* Stacked and tilted until the panel is reached, then dealt out in order.
+     The offset is negative so the deck reads as collapsed upward into itself
+     rather than sliding in from below like everything else on the web. */
+  opacity: 0;
+  transform: translateY(calc(var(--i, 0) * -14px + 10px)) scale(0.975)
+    rotate(calc(var(--i, 0) * 0.35deg));
+  transform-origin: left center;
+  transition:
+    opacity 520ms var(--ease-out),
+    transform 620ms var(--ease-out),
+    border-color 200ms var(--ease-out),
+    background-color 200ms var(--ease-out);
+}
+
+.panelOpen .card {
+  opacity: 1;
+  transform: none;
+  /* Dealt one after another, so the stack visibly fans rather than appearing
+     all at once. */
+  transition-delay: calc(var(--i, 0) * 90ms);
+}
+
+.card:hover {
+  border-color: var(--line-strong);
+  background: rgba(16, 23, 36, 0.72);
+}
+
+.quietCard {
+  background: rgba(9, 13, 22, 0.45);
+}
+
+.domainCard {
+  gap: 0.45rem;
+}
+
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+}
+
+.cardTitle {
+  font-size: 1.0625rem;
+}
+
+.cardMeta {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.cardSource {
+  font-size: 0.9375rem;
+  color: var(--accent);
+}
+
+.cardSummary {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  max-width: 44rem;
+}
+
+/* What a role actually produced. */
+.highlights {
+  margin: 0.5rem 0 0;
+  /* globals.css strips list markers from every ul. These are the one place a
+     marker carries meaning: separate things built, not one paragraph. */
+  list-style: disc;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  max-width: 46rem;
+}
+
+.highlights li::marker {
+  color: var(--text-faint);
+}
+
+/* ---------- Projects inside a domain: the layered tier ---------- */
+
+.subDeck {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.6rem;
+  padding-left: 1rem;
+  border-left: 1px solid var(--line);
+}
+
+@media (min-width: 60rem) {
+  .subDeck {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.subCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  transition:
+    border-color 180ms var(--ease-out),
+    background-color 180ms var(--ease-out),
+    transform 180ms var(--ease-out);
+}
+
+.subCard:hover {
+  border-color: var(--line);
+  background: rgba(20, 28, 43, 0.55);
+  transform: translateY(-2px);
+}
+
+.subTitle {
+  align-self: flex-start;
+  font-size: 0.9375rem;
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 0.25em;
+  transition: text-decoration-color 160ms var(--ease-out);
+}
+
+a.subTitle:hover {
+  text-decoration-color: var(--accent);
+}
+
+.subSummary {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--text-faint);
+}
+
+/* ---------- Skills ---------- */
+
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* A real control, so it carries the same 44px target as every other button. */
+.skill {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.35rem 0.95rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    color 160ms var(--ease-out),
+    border-color 160ms var(--ease-out),
+    background-color 160ms var(--ease-out);
+}
+
+.skill:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+.skill[aria-pressed="true"] {
+  color: var(--text);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.match {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.matchText {
+  color: var(--text-muted);
+}
+
+.clear {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.25rem;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  cursor: pointer;
+  transition: color 160ms var(--ease-out);
+}
+
+.clear:hover {
+  color: var(--text);
+}
+
+/* Recedes while a skill is selected. Dimmed, never hidden: PROJECT.md §9
+   forbids critical information depending on an interaction. */
+.muted {
+  opacity: 0.32;
+}
+
+/* ---------- Meta and certifications ---------- */
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  margin-top: 0.3rem;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.tag {
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+
+.role {
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}
+
+/* Quiet by design: a plain row of links, no summaries, no dates. */
+.certifications {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+}
+
+.certification {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 0.2em;
+}
+
+.certification:hover {
+  color: var(--text);
+}
+
+/* ---------- Reduced motion ----------
+   Everything above is a transition on top of a readable document, so removing
+   the motion leaves the document. Nothing is revealed by animation alone. */
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .card,
+  .subCard,
+  .railDot,
+  .railNode {
+    transition: none;
+  }
+
+  .panel,
+  .card {
+    opacity: 1;
+    transform: none;
+  }
+
+  .panelOpen:hover,
+  .subCard:hover {
+    transform: none;
+  }
+}

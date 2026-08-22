@@ -111,7 +111,7 @@
 
 .view {
   display: block;
-  /* Keeps the tap target at 44px and stops "Quick View" wrapping on narrow screens. */
+  /* Keeps the tap target at 44px and stops "Dossier" wrapping on narrow screens. */
   padding: 0.7rem 0.75rem;
   white-space: nowrap;
   border-radius: 999px;
@@ -134,5 +134,47 @@
     /* Only the horizontal breathing room grows — the 44px target height holds
        at every width, since 48rem is still touch territory. */
     padding: 0.7rem 1rem;
+  }
+}
+
+/* "Dossier" is the right word and an uncommon one, so the plain-English gloss
+   is one keystroke or one hover away. Shown on focus-within as well as hover:
+   a title attribute never reaches a keyboard user. */
+.viewItem {
+  position: relative;
+}
+
+.gloss {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 20;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--elevated);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text-muted);
+  opacity: 0;
+  transform: translateY(-3px);
+  pointer-events: none;
+  transition:
+    opacity 140ms var(--ease-out),
+    transform 140ms var(--ease-out);
+}
+
+.viewItem:hover .gloss,
+.viewItem:focus-within .gloss {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gloss {
+    transition: none;
   }
 }
