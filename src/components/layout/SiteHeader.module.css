@@ -110,7 +110,9 @@
 }
 
 .view {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
   /* Keeps the tap target at 44px and stops "Dossier" wrapping on narrow screens. */
   padding: 0.7rem 0.75rem;
   white-space: nowrap;
@@ -127,6 +129,19 @@
 .view[aria-current="page"] {
   color: var(--text);
   background: var(--accent-soft);
+}
+
+/* Marks a destination that leaves this site. Smaller and fainter than the
+   label: it is a signal, not a second word. */
+.externalMark {
+  font-size: 0.6875rem;
+  line-height: 1;
+  color: var(--text-faint);
+  transition: color 160ms var(--ease-out);
+}
+
+.view:hover .externalMark {
+  color: var(--text-muted);
 }
 
 @media (min-width: 48rem) {

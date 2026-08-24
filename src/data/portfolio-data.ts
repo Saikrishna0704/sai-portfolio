@@ -97,6 +97,12 @@ export interface Person {
     email: string;
     orcid: string;
     x: string;
+    /**
+     * The writing, which is deliberately its own Hugo site rather than a
+     * section of this one. Held here so the header links to a fact about the
+     * person rather than to a URL hard-coded in a component.
+     */
+    blog: string;
   };
   // Resume intentionally omitted for now — not silently dropped, explicitly deferred.
   resumeUrl: null;
@@ -141,6 +147,7 @@ export const portfolioData: PortfolioData = {
       email: "saikrishna.tammali04@gmail.com",
       orcid: "https://orcid.org/0009-0009-4034-8195",
       x: "https://x.com/exergyofsai",
+      blog: "https://saikrishna0704.github.io/",
     },
     resumeUrl: null,
   },
