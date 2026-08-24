@@ -1,7 +1,7 @@
 "use client";
 
 import { useFrame, useThree } from "@react-three/fiber";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { MathUtils, PerspectiveCamera, Vector3 } from "three";
 
 import { MOON_LABEL_REACH, planets, systemRadius } from "@/scene/layout";
@@ -77,6 +77,20 @@ const CINEMATIC_LAMBDA = 1.1;
  */
 const ARRIVAL_SETTLED = 0.06;
 
+/**
+ * How far the pointer can lean the camera, in radians.
+ *
+ * A fraction of a degree of orbit per screen-width of pointer travel — enough
+ * that the system answers the hand and the starfield slides in parallax,
+ * far too little to disturb framing or navigation. The scene responding to
+ * attention is what separates a live space from a rendered picture.
+ */
+const PARALLAX_AZIMUTH = MathUtils.degToRad(2.2);
+const PARALLAX_ELEVATION = MathUtils.degToRad(1.6);
+/** Damping for the lean: looser than navigation, so it trails the pointer
+ *  like something heavy rather than tracking it rigidly. */
+const PARALLAX_LAMBDA = 2.2;
+
 /** Wraps an angle into [-PI, PI] so damping always takes the short way round. */
 function wrapAngle(angle: number): number {
   return Math.atan2(Math.sin(angle), Math.cos(angle));
@@ -143,6 +157,26 @@ export function CameraRig({
   // Decided once, at the first frame: the long approach is the opening's, not
   // something to sit through on every reload.
   const cinematic = useRef(false);
+
+  // Where the pointer is leaning the view, and where it currently wants to.
+  // Mouse-only by construction: touch fires no pointermove while idle, so on
+  // touch devices both stay zero and the rig behaves exactly as before.
+  const leanTarget = useRef({ x: 0, y: 0 });
+  const lean = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (reducedMotion) return;
+
+    const handleMove = (event: PointerEvent) => {
+      if (event.pointerType !== "mouse") return;
+      // Normalised to [-1, 1] from screen centre.
+      leanTarget.current.x = (event.clientX / window.innerWidth) * 2 - 1;
+      leanTarget.current.y = (event.clientY / window.innerHeight) * 2 - 1;
+    };
+
+    window.addEventListener("pointermove", handleMove, { passive: true });
+    return () => window.removeEventListener("pointermove", handleMove);
+  }, [reducedMotion]);
 
   useFrame((state, delta) => {
     if (!(camera instanceof PerspectiveCamera)) return;
@@ -257,13 +291,25 @@ export function CameraRig({
       }
     }
 
+    // The pointer's lean, damped separately so it drifts after the hand.
+    // Held out of the opening approach — that shot belongs to the camera —
+    // and inert under reduced motion and on touch, where the target is zero.
+    const leanT = 1 - Math.exp(-PARALLAX_LAMBDA * delta);
+    lean.current.x += (leanTarget.current.x - lean.current.x) * leanT;
+    lean.current.y += (leanTarget.current.y - lean.current.y) * leanT;
+    const leanActive = !reducedMotion && !arriving.current;
+    const viewAzimuth =
+      azimuth.current + (leanActive ? lean.current.x * PARALLAX_AZIMUTH : 0);
+    const viewElevation =
+      elevation.current + (leanActive ? -lean.current.y * PARALLAX_ELEVATION : 0);
+
     // Elevation is the resting angle for everything except the first approach,
     // which climbs into it.
-    const horizontalReach = Math.cos(elevation.current) * distance.current;
+    const horizontalReach = Math.cos(viewElevation) * distance.current;
     camera.position.set(
-      focus.current.x + Math.cos(azimuth.current) * horizontalReach,
-      focus.current.y + Math.sin(elevation.current) * distance.current,
-      focus.current.z + Math.sin(azimuth.current) * horizontalReach,
+      focus.current.x + Math.cos(viewAzimuth) * horizontalReach,
+      focus.current.y + Math.sin(viewElevation) * distance.current,
+      focus.current.z + Math.sin(viewAzimuth) * horizontalReach,
     );
     camera.lookAt(focus.current);
   });

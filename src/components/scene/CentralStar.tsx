@@ -5,16 +5,19 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AdditiveBlending,
   CanvasTexture,
-  Color,
   Mesh,
-  MeshBasicMaterial,
   PointLight,
+  ShaderMaterial,
   SRGBColorSpace,
   Sprite,
   SpriteMaterial,
 } from "three";
 
-import { STAR_COLOR, WORLD } from "@/scene/layout";
+import { WORLD } from "@/scene/layout";
+import {
+  createStarSurfaceMaterial,
+  type StarSurfaceMaterial,
+} from "@/scene/starSurface";
 
 const GLOW_TEXTURE_SIZE = 256;
 /**
@@ -31,11 +34,10 @@ const GLOW_SCALE = 5.4;
  *  camera's approach, so the light arrives with the system rather than trailing
  *  it by several seconds. */
 const IGNITION_LAMBDA = 1.2;
-/** At this point the ignition is finished and the frame work can stop. The last
- *  fraction of a percent is not visible and is not worth a per-frame cost. */
+/** At this point the ignition is finished and that part of the frame work can
+ *  stop. The last fraction of a percent is not visible and is not worth a
+ *  per-frame cost. */
 const IGNITION_DONE = 0.99;
-/** What the core is banked at before it catches: an ember, not darkness. */
-const EMBER_COLOR = "#3a1c0a";
 /** Resting intensity of the light the star casts over the system. */
 const LIGHT_INTENSITY = 520;
 /** Fraction of extra halo at the peak of the flare. The halo overshoots its
@@ -96,7 +98,8 @@ interface CentralStarProps {
 /**
  * The person, at the centre and source of the system (PROJECT.md §3).
  *
- * Self-luminous: an unlit core plus one additive halo sprite.
+ * Self-luminous: a shader surface (granulation, limb darkening — see
+ * `starSurface.ts`) plus one additive halo sprite.
  *
  * It ignites rather than appearing lit. Holding the core at an ember and the
  * halo at nothing until the opening lifts means the first thing the reveal
@@ -119,23 +122,38 @@ export function CentralStar({ reducedMotion, mayArrive }: CentralStarProps) {
   // finds the star already lit rather than sitting through the ignition again.
   const [cinematic] = useState(() => !reducedMotion && !mayArrive);
   const ignition = useRef(cinematic ? 0 : 1);
-  const ember = useMemo(() => new Color(EMBER_COLOR), []);
-  const lit = useMemo(() => new Color(STAR_COLOR), []);
 
-  useFrame((_, delta) => {
+  const surface = useMemo(
+    () => createStarSurfaceMaterial(cinematic ? 0 : 1),
+    [cinematic],
+  );
+  useEffect(() => () => surface.dispose(), [surface]);
+
+  useFrame((state, delta) => {
+    // Reached through the mesh ref rather than the memo, the same way the
+    // original colour ramp went through the material: frame-loop work stays
+    // out of render-scoped values.
+    const coreMaterial = core.current?.material;
+    const surfaceMaterial =
+      coreMaterial instanceof ShaderMaterial
+        ? (coreMaterial as StarSurfaceMaterial)
+        : null;
+
+    // The granulation drifts for as long as the star is on screen; with motion
+    // reduced the time uniform stays put and the surface is a still texture.
+    if (!reducedMotion && surfaceMaterial) {
+      surfaceMaterial.uniforms.uTime.value = state.clock.elapsedTime;
+    }
+
     if (!mayArrive || ignition.current >= IGNITION_DONE) return;
 
     ignition.current +=
       (1 - ignition.current) * (1 - Math.exp(-IGNITION_LAMBDA * delta));
 
     const t = ignition.current;
+    if (surfaceMaterial) surfaceMaterial.uniforms.uIgnition.value = t;
     // Peaks halfway through and returns, giving the halo its overshoot.
     const flare = 1 + FLARE * Math.sin(Math.PI * t);
-
-    const coreMaterial = core.current?.material;
-    if (coreMaterial instanceof MeshBasicMaterial) {
-      coreMaterial.color.lerpColors(ember, lit, t);
-    }
 
     if (halo.current) {
       const size = glowSize * t * flare;
@@ -161,9 +179,10 @@ export function CentralStar({ reducedMotion, mayArrive }: CentralStarProps) {
         decay={2}
       />
 
-      <mesh ref={core}>
-        <sphereGeometry args={[WORLD.starRadius, 48, 48]} />
-        <meshBasicMaterial color={cinematic ? EMBER_COLOR : STAR_COLOR} />
+      <mesh ref={core} material={surface}>
+        {/* Segments beyond the planets' own: the limb darkening traces the
+            silhouette, and a faceted edge would show straight through it. */}
+        <sphereGeometry args={[WORLD.starRadius, 64, 64]} />
       </mesh>
 
       {glowTexture && (

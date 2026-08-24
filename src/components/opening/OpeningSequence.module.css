@@ -21,6 +21,13 @@
   background: transparent;
 }
 
+.lockup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+}
+
 .name {
   /* The header's own face, so the morph lands on matching letterforms rather
      than crossfading between two different typefaces. */
@@ -40,6 +47,37 @@
      the morph are not the ones that stutter. */
   will-change: transform;
   animation: settle 170ms var(--ease-out);
+}
+
+/* The line under the name: what this person does, surfacing only once the
+   name has resolved. Occupies its space from the start so nothing shifts. */
+.tagline {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.6875rem, 1.6vw, 0.8125rem);
+  letter-spacing: 0.34em;
+  /* Centres the tracked text: letter-spacing trails the last glyph, so a
+     little leading indent balances it. */
+  text-indent: 0.34em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 520ms var(--ease-out),
+    transform 520ms var(--ease-out);
+}
+
+.taglineShown {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stays in place as the name flies to the corner, then dissolves with the
+   veil — slower than it arrived, so it reads as settling into the scene. */
+.taglineParting {
+  opacity: 0;
+  transform: translateY(0);
+  transition: opacity 620ms 120ms var(--ease-out);
 }
 
 /* A short rise on each script, enough to read as a change without becoming a

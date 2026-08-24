@@ -2,8 +2,21 @@
 
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
-import { Color, type Group, type Mesh } from "three";
+import {
+  AdditiveBlending,
+  Color,
+  ShaderMaterial,
+  SpriteMaterial,
+  type Group,
+  type Mesh,
+  type Sprite,
+} from "three";
 
+import {
+  createAtmosphereMaterial,
+  createGlowTexture,
+  type AtmosphereMaterial,
+} from "@/scene/atmosphere";
 import { MOON_COLOR, type PlanetLayout } from "@/scene/layout";
 import {
   moonFanRotation,
@@ -31,6 +44,26 @@ const MOON_TARGET_RADIUS = 0.8;
 const DIM_FACTOR = 0.3;
 /** The same amount as a neutral grey, for multiplying a mapped surface down. */
 const DIM_TINT = "#4d4d4d";
+
+/**
+ * Shell width of the atmospheric rim, as a multiple of the body's radius.
+ * Thin on purpose: a wide fresnel shell peaks at its own silhouette and reads
+ * as a ring detached from the planet (see `atmosphere.ts`).
+ */
+const ATMOSPHERE_SCALE = 1.06;
+/** Rim strength per emphasis level. The rim is the emphasis channel that does
+ *  not rely on colour alone: the focused domain visibly breathes light. */
+const ATMOSPHERE_ACTIVE = 1.5;
+const ATMOSPHERE_RESTING = 0.65;
+const ATMOSPHERE_DIMMED = 0.12;
+/** The soft outer haze, as a multiple of the body's radius and per emphasis
+ *  level. Far fainter than the rim: it carries mood, not edges. */
+const HAZE_SCALE = 3.1;
+const HAZE_ACTIVE = 0.5;
+const HAZE_RESTING = 0.22;
+const HAZE_DIMMED = 0.05;
+/** Damping rate for emphasis changes — quick, but never a switch flip. */
+const EMPHASIS_LAMBDA = 6;
 
 interface DomainPlanetProps {
   planet: PlanetLayout;
@@ -69,6 +102,7 @@ export function DomainPlanet({
 }: DomainPlanetProps) {
   const groupRef = useRef<Group>(null);
   const bodyRef = useRef<Mesh>(null);
+  const atmosphereRef = useRef<Mesh>(null);
   const moonsRef = useRef<Group>(null);
 
   const isActive = activeDomainId === planet.domainId;
@@ -100,6 +134,43 @@ export function DomainPlanet({
 
   useEffect(() => () => surface?.dispose(), [surface]);
 
+  const atmosphere = useMemo(
+    () => createAtmosphereMaterial(planet.color, ATMOSPHERE_RESTING),
+    [planet.color],
+  );
+  useEffect(() => () => atmosphere.dispose(), [atmosphere]);
+
+  const hazeRef = useRef<Sprite>(null);
+  const hazeTexture = useMemo(
+    () => createGlowTexture(planet.color),
+    [planet.color],
+  );
+  useEffect(() => () => hazeTexture?.dispose(), [hazeTexture]);
+
+  // Each moon gets its own quiet grey surface, seeded per project so it keeps
+  // the same face across reloads. Bare spheres read as primitives; the point
+  // of the texture is that a moon looks like a place, not a marker.
+  const moonSurfaces = useMemo(
+    () =>
+      new Map(
+        planet.moons.map((moon) => [
+          moon.projectId,
+          createPlanetTexture(
+            MOON_COLOR,
+            [...moon.projectId].reduce(
+              (total, character) => total * 31 + character.charCodeAt(0),
+              11,
+            ),
+          ),
+        ]),
+      ),
+    [planet.moons],
+  );
+  useEffect(
+    () => () => moonSurfaces.forEach((texture) => texture?.dispose()),
+    [moonSurfaces],
+  );
+
   const moonColor = useMemo(
     () =>
       isDimmed
@@ -108,7 +179,34 @@ export function DomainPlanet({
     [isDimmed],
   );
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
+    // Emphasis eases rather than switching, and it eases even when ambient
+    // motion is off: reduced motion stills the orbits, it does not require
+    // selection feedback to pop. Reached through the shell's ref so the frame
+    // loop never writes into render-scoped values.
+    const emphasisT = reducedMotion ? 1 : 1 - Math.exp(-EMPHASIS_LAMBDA * delta);
+
+    const shellMaterial = atmosphereRef.current?.material;
+    if (shellMaterial instanceof ShaderMaterial) {
+      const targetStrength = isActive
+        ? ATMOSPHERE_ACTIVE
+        : isDimmed
+          ? ATMOSPHERE_DIMMED
+          : ATMOSPHERE_RESTING;
+      const strength = (shellMaterial as AtmosphereMaterial).uniforms.uStrength;
+      strength.value += (targetStrength - strength.value) * emphasisT;
+    }
+
+    const hazeMaterial = hazeRef.current?.material;
+    if (hazeMaterial instanceof SpriteMaterial) {
+      const targetHaze = isActive
+        ? HAZE_ACTIVE
+        : isDimmed
+          ? HAZE_DIMMED
+          : HAZE_RESTING;
+      hazeMaterial.opacity += (targetHaze - hazeMaterial.opacity) * emphasisT;
+    }
+
     if (reducedMotion) return;
 
     // Absolute elapsed time, never an accumulated delta: no drift, and a
@@ -164,9 +262,36 @@ export function DomainPlanet({
           roughness={0.85}
           metalness={0}
           emissive={planet.color}
-          emissiveIntensity={isActive ? 0.32 : 0}
+          emissiveIntensity={isActive ? 0.16 : 0}
         />
       </mesh>
+
+      {/* Atmospheric rim: the limb glow that makes the sphere read as a body
+          with air around it, and the channel focus emphasis breathes through. */}
+      <mesh ref={atmosphereRef} material={atmosphere} scale={ATMOSPHERE_SCALE}>
+        <sphereGeometry args={[planet.radius, 32, 32]} />
+      </mesh>
+
+      {/* The haze beyond the limb — one soft additive quad, as with the star's
+          halo. Opacity is the damped emphasis channel. */}
+      {hazeTexture && (
+        <sprite
+          ref={hazeRef}
+          scale={[
+            planet.radius * HAZE_SCALE,
+            planet.radius * HAZE_SCALE,
+            1,
+          ]}
+        >
+          <spriteMaterial
+            map={hazeTexture}
+            blending={AdditiveBlending}
+            transparent
+            opacity={HAZE_RESTING}
+            depthWrite={false}
+          />
+        </sprite>
+      )}
 
       {/* Pointer target. Opacity 0 rather than visible={false}, so it is
           reliably raycast while drawing nothing. */}
@@ -210,11 +335,16 @@ export function DomainPlanet({
               <mesh>
                 <sphereGeometry args={[moon.radius, 20, 20]} />
                 <meshStandardMaterial
-                  color={moonColor}
+                  map={moonSurfaces.get(moon.projectId) ?? undefined}
+                  // The map carries the moon grey; `color` multiplies it, so
+                  // dimming is the same neutral pull-down the planet uses.
+                  color={isDimmed ? DIM_TINT : "#ffffff"}
                   roughness={0.9}
                   metalness={0}
                   emissive={moonColor}
-                  emissiveIntensity={isSelectedProject ? 0.5 : 0}
+                  emissiveIntensity={
+                    isSelectedProject ? 0.5 : isHoveredMoon ? 0.22 : 0
+                  }
                 />
               </mesh>
 

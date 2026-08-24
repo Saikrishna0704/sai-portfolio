@@ -12,6 +12,31 @@
   border-radius: 14px;
   background: color-mix(in srgb, var(--void) 86%, transparent);
   backdrop-filter: blur(10px);
+  /* Arrives with the camera move it accompanies rather than popping in a
+     frame ahead of it. Mount-only: the panel unmounts on the way out, and a
+     surface that lingered would lag the scene it describes. */
+  animation: panel-in 460ms var(--ease-out) backwards;
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+/* The detail a selected project unfolds inside the list. */
+.summary,
+.tags,
+.link {
+  animation: detail-in 360ms var(--ease-out) backwards;
+}
+
+@keyframes detail-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
 }
 
 .title {

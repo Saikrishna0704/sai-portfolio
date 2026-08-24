@@ -51,9 +51,20 @@ export function SelectionProvider({ children }: { children: ReactNode }) {
   const [selection, setSelection] = useState<Selection>(OVERVIEW);
   const [hover, setHover] = useState<Hover | null>(null);
 
-  const clearSelection = useCallback(() => setSelection(OVERVIEW), []);
+  // Every navigation resets hover. The pointer's pointerout cannot be relied
+  // on across a selection change: the control being hovered may unmount with
+  // the panel (Escape while on a project button), which strands a hover that
+  // keeps a label and highlight alive in the scene. Anything still under the
+  // pointer re-announces itself on the next pointerover.
+  const clearSelection = useCallback(() => {
+    setSelection(OVERVIEW);
+    setHover(null);
+  }, []);
 
-  const select = useCallback((next: Selection) => setSelection(next), []);
+  const select = useCallback((next: Selection) => {
+    setSelection(next);
+    setHover(null);
+  }, []);
 
   const goUp = useCallback(() => {
     setSelection((current) =>
@@ -61,6 +72,7 @@ export function SelectionProvider({ children }: { children: ReactNode }) {
         ? { kind: "domain", domainId: current.domainId }
         : OVERVIEW,
     );
+    setHover(null);
   }, []);
 
   // Escape steps back up the hierarchy rather than jumping straight out, so

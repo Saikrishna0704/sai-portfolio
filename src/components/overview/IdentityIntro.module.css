@@ -1,0 +1,58 @@
+.intro {
+  /* The shell is transparent to the pointer; the Dossier link inside this
+     block is real, so the block switches itself back on when shown. */
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-width: 26rem;
+  /* Clear of the very corner, where dev overlays and rounded window corners
+     live; it also reads better sitting slightly off the edge. */
+  margin-bottom: 0.9rem;
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 700ms var(--ease-out),
+    transform 700ms var(--ease-out);
+}
+
+.shown {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.tagline {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.bio {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--text-muted);
+  /* Legible over whatever the scene puts behind it, without boxing the text
+     into a card that would compete with the SelectionPanel's surface. */
+  text-shadow: 0 1px 12px rgba(4, 6, 11, 0.85);
+}
+
+.hint {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+}
+
+.hintLink {
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+  transition: color 180ms var(--ease-out);
+}
+
+.hintLink:hover {
+  color: var(--text);
+}
