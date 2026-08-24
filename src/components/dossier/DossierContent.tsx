@@ -564,10 +564,7 @@ export function DossierContent() {
         )}
 
         {funProjects.length > 0 && (
-          <Panel
-            {...panelFor("fun")}
-            note="Built for their own sake, so they sit apart from the domains rather than inside one."
-          >
+          <Panel {...panelFor("fun")}>
             <ul className={styles.deck}>
               {funProjects.map((project, index) => (
                 <li
@@ -595,10 +592,7 @@ export function DossierContent() {
         )}
 
         {archived.length > 0 && (
-          <Panel
-            {...panelFor("earlier")}
-            note="Real published work that should stay findable, without competing with the current focus."
-          >
+          <Panel {...panelFor("earlier")}>
             <ul className={styles.deck}>
               {archived.map((item, index) => (
                 <li
