@@ -13,6 +13,9 @@ next-env.d.ts
 .DS_Store
 *.pem
 
+# local working notes / prompts
+/Fable_Instructions.md/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
