@@ -1,0 +1,84 @@
+/* Same treatment as the Dossier: a flat dim over the whole viewport so the
+   system reads as a faint field behind the text rather than competing with it,
+   and so the scene cannot be clicked from a page with no selection UI. */
+.page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgba(4, 6, 11, 0.82);
+  pointer-events: auto;
+}
+
+.page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 4rem var(--gutter) 6rem;
+  /* The shell is transparent to the pointer; this is a real surface. */
+  pointer-events: auto;
+}
+
+.code {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  color: var(--text-faint);
+}
+
+.title {
+  font-size: clamp(1.6rem, 4.5vw, 2.25rem);
+  line-height: 1.1;
+}
+
+.body {
+  max-width: 34rem;
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  margin-top: 0.75rem;
+}
+
+/* Both keep the 44px target the rest of the site holds to. */
+.primary,
+.secondary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 160ms var(--ease-out);
+}
+
+.primary {
+  padding: 0 1rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--text);
+}
+
+.primary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.secondary {
+  color: var(--text-faint);
+}
+
+.secondary:hover {
+  color: var(--text);
+}

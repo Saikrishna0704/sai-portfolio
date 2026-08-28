@@ -19,7 +19,11 @@
   /* Type */
   --text: #e6ecf6;
   --text-muted: #909db4;
-  --text-faint: #5e6979;
+  /* 4.9:1 against --void. The previous #5e6979 measured 3.64:1, which fails
+     WCAG AA for normal text, and this token is used almost entirely on small
+     mono type — timestamps, tags, return links — where the shortfall bites
+     hardest. Still clearly the faintest of the three, so the hierarchy holds. */
+  --text-faint: #717e91;
 
   /* Restrained stellar highlight */
   --accent: #b9d4ff;
