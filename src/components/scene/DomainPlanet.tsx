@@ -4,7 +4,6 @@ import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import {
   AdditiveBlending,
-  Color,
   ShaderMaterial,
   SpriteMaterial,
   type Group,
@@ -24,7 +23,10 @@ import {
   PLANET_SPIN_SPEED,
   planetAngleAt,
 } from "@/scene/motion";
-import { createPlanetTexture } from "@/scene/planetTexture";
+import {
+  createPlanetSurfaceMaterial,
+  type PlanetSurfaceMaterial,
+} from "@/scene/planetSurface";
 import type { Hover, Selection } from "@/state/selection";
 
 import { BodyLabel } from "./BodyLabel";
@@ -43,8 +45,6 @@ const MOON_TARGET_RADIUS = 0.8;
 
 /** How far a receding body's colour is pulled down when another is in focus. */
 const DIM_FACTOR = 0.3;
-/** The same amount as a neutral grey, for multiplying a mapped surface down. */
-const DIM_TINT = "#4d4d4d";
 
 /**
  * Shell width of the atmospheric rim, as a multiple of the body's radius.
@@ -68,8 +68,73 @@ const HAZE_DIMMED = 0.05;
 const RINGS_ACTIVE = 1;
 const RINGS_RESTING = 0.62;
 const RINGS_DIMMED = 0.12;
+/** Brightness a moon takes when it is the selected project, or merely under
+ *  the pointer. Above 1, so the body lifts out of the group rather than the
+ *  rest having to recede for it. */
+const MOON_SELECTED = 1.55;
+const MOON_HOVERED = 1.22;
+/** Moons are rock, not gas: the low end of the surface character axis. */
+const MOON_CHARACTER = 0.12;
 /** Damping rate for emphasis changes — quick, but never a switch flip. */
 const EMPHASIS_LAMBDA = 6;
+
+interface ProjectMoonProps {
+  projectId: string;
+  radius: number;
+  /** Target brightness multiplier, damped rather than switched. */
+  emphasis: number;
+  reducedMotion: boolean;
+}
+
+/**
+ * A project, as a moon.
+ *
+ * Its own component purely so each moon can hold a ref and damp its own
+ * brightness in the frame loop. Doing that from the parent would need a ref
+ * per moon and a lookup by id every frame, for no gain.
+ *
+ * Shares the planets' surface shader rather than the flat mapped material it
+ * used to have, so a moon has the same soft terminator and real surface the
+ * bodies it orbits do — at this size the old hard shadow line was the most
+ * obviously synthetic thing left in the scene.
+ */
+function ProjectMoon({
+  projectId,
+  radius,
+  emphasis,
+  reducedMotion,
+}: ProjectMoonProps) {
+  const ref = useRef<Mesh>(null);
+
+  const material = useMemo(() => {
+    const seed = [...projectId].reduce(
+      (total, character) => total * 31 + character.charCodeAt(0),
+      11,
+    );
+    return createPlanetSurfaceMaterial(
+      MOON_COLOR,
+      MOON_CHARACTER,
+      (seed % 977) / 97,
+    );
+  }, [projectId]);
+
+  useEffect(() => () => material.dispose(), [material]);
+
+  useFrame((_, delta) => {
+    const current = ref.current?.material;
+    if (!(current instanceof ShaderMaterial)) return;
+    const dim = (current as PlanetSurfaceMaterial).uniforms.uDim;
+    dim.value +=
+      (emphasis - dim.value) *
+      (reducedMotion ? 1 : 1 - Math.exp(-EMPHASIS_LAMBDA * delta));
+  });
+
+  return (
+    <mesh ref={ref} material={material}>
+      <sphereGeometry args={[radius, 32, 32]} />
+    </mesh>
+  );
+}
 
 interface DomainPlanetProps {
   planet: PlanetLayout;
@@ -135,10 +200,16 @@ export function DomainPlanet({
       (total, character) => total * 31 + character.charCodeAt(0),
       7,
     );
-    return createPlanetTexture(planet.color, seed);
-  }, [planet.domainId, planet.color]);
+    return createPlanetSurfaceMaterial(
+      planet.color,
+      planet.character,
+      // Kept small: the shader hashes on this, and a huge seed loses
+      // precision in a mediump float and bands the noise.
+      (seed % 977) / 97,
+    );
+  }, [planet.domainId, planet.color, planet.character]);
 
-  useEffect(() => () => surface?.dispose(), [surface]);
+  useEffect(() => () => surface.dispose(), [surface]);
 
   const atmosphere = useMemo(
     () => createAtmosphereMaterial(planet.color, ATMOSPHERE_RESTING),
@@ -159,7 +230,6 @@ export function DomainPlanet({
     if (!rings) return null;
     return createRingMaterial(
       planet.color,
-      rings.bands,
       rings.inner,
       rings.outer,
       rings.seed,
@@ -167,38 +237,6 @@ export function DomainPlanet({
     );
   }, [planet.rings, planet.color]);
   useEffect(() => () => ringMaterial?.dispose(), [ringMaterial]);
-
-  // Each moon gets its own quiet grey surface, seeded per project so it keeps
-  // the same face across reloads. Bare spheres read as primitives; the point
-  // of the texture is that a moon looks like a place, not a marker.
-  const moonSurfaces = useMemo(
-    () =>
-      new Map(
-        planet.moons.map((moon) => [
-          moon.projectId,
-          createPlanetTexture(
-            MOON_COLOR,
-            [...moon.projectId].reduce(
-              (total, character) => total * 31 + character.charCodeAt(0),
-              11,
-            ),
-          ),
-        ]),
-      ),
-    [planet.moons],
-  );
-  useEffect(
-    () => () => moonSurfaces.forEach((texture) => texture?.dispose()),
-    [moonSurfaces],
-  );
-
-  const moonColor = useMemo(
-    () =>
-      isDimmed
-        ? new Color(MOON_COLOR).multiplyScalar(DIM_FACTOR)
-        : new Color(MOON_COLOR),
-    [isDimmed],
-  );
 
   useFrame((state, delta) => {
     // Emphasis eases rather than switching, and it eases even when ambient
@@ -226,6 +264,12 @@ export function DomainPlanet({
           ? HAZE_DIMMED
           : HAZE_RESTING;
       hazeMaterial.opacity += (targetHaze - hazeMaterial.opacity) * emphasisT;
+    }
+
+    const bodyMaterial = bodyRef.current?.material;
+    if (bodyMaterial instanceof ShaderMaterial) {
+      const dim = (bodyMaterial as PlanetSurfaceMaterial).uniforms.uDim;
+      dim.value += ((isDimmed ? DIM_FACTOR : 1) - dim.value) * emphasisT;
     }
 
     const ringsMaterial = ringsRef.current?.material;
@@ -283,19 +327,10 @@ export function DomainPlanet({
 
   return (
     <group ref={groupRef} position={planet.position}>
-      <mesh ref={bodyRef}>
-        <sphereGeometry args={[planet.radius, 32, 32]} />
-        <meshStandardMaterial
-          map={surface}
-          // The map already carries the domain colour, and `color` multiplies
-          // it. So white leaves the surface alone, and receding is a neutral
-          // multiply down rather than a second tint, which would shift the hue.
-          color={isDimmed ? DIM_TINT : "#ffffff"}
-          roughness={0.85}
-          metalness={0}
-          emissive={planet.color}
-          emissiveIntensity={isActive ? 0.16 : 0}
-        />
+      {/* Segments doubled: the shader's terminator and polar margin trace the
+          silhouette, and a 32-segment sphere showed its facets along both. */}
+      <mesh ref={bodyRef} material={surface}>
+        <sphereGeometry args={[planet.radius, 64, 64]} />
       </mesh>
 
       {/* Atmospheric rim: the limb glow that makes the sphere read as a body
@@ -304,10 +339,10 @@ export function DomainPlanet({
         <sphereGeometry args={[planet.radius, 32, 32]} />
       </mesh>
 
-      {/* Supporting technologies, as a ring system (PROJECT.md §3). One band
-          per declared skill, tilted off the orbital plane so it reads as an
-          ellipse from the fixed viewing elevation. Drawn before the haze so
-          the haze layers over its inner edge. */}
+      {/* Supporting technologies, as a ring system (PROJECT.md §3). Tilted off
+          the orbital plane so it reads as an ellipse from the fixed viewing
+          elevation. Drawn before the haze so the haze layers over its inner
+          edge. */}
       {planet.rings && ringMaterial && (
         <mesh
           ref={ringsRef}
@@ -380,21 +415,20 @@ export function DomainPlanet({
 
           return (
             <group key={moon.projectId} position={moon.position}>
-              <mesh>
-                <sphereGeometry args={[moon.radius, 20, 20]} />
-                <meshStandardMaterial
-                  map={moonSurfaces.get(moon.projectId) ?? undefined}
-                  // The map carries the moon grey; `color` multiplies it, so
-                  // dimming is the same neutral pull-down the planet uses.
-                  color={isDimmed ? DIM_TINT : "#ffffff"}
-                  roughness={0.9}
-                  metalness={0}
-                  emissive={moonColor}
-                  emissiveIntensity={
-                    isSelectedProject ? 0.5 : isHoveredMoon ? 0.22 : 0
-                  }
-                />
-              </mesh>
+              <ProjectMoon
+                projectId={moon.projectId}
+                radius={moon.radius}
+                emphasis={
+                  isSelectedProject
+                    ? MOON_SELECTED
+                    : isHoveredMoon
+                      ? MOON_HOVERED
+                      : isDimmed
+                        ? DIM_FACTOR
+                        : 1
+                }
+                reducedMotion={reducedMotion}
+              />
 
               <mesh
                 onPointerOver={(event) => {

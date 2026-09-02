@@ -91,6 +91,23 @@ const PARALLAX_ELEVATION = MathUtils.degToRad(1.6);
  *  like something heavy rather than tracking it rigidly. */
 const PARALLAX_LAMBDA = 2.2;
 
+/**
+ * How far the framing slides left when the selection card is open, as a
+ * fraction of the half-width visible at the focus distance.
+ *
+ * The card occupies the right of the frame, and without this the moons and
+ * their labels sit underneath it. Shifting the subject into the free space
+ * puts the system on the left and the record on the right, which is the
+ * composition the whole view is arranged around.
+ */
+const CARD_SHIFT = 0.42;
+/**
+ * Below this viewport width the card is a bottom sheet rather than a side
+ * panel (see SelectionPanel.module.css), so there is nothing to the right to
+ * make room for and the shift would only push the subject off centre.
+ */
+const CARD_SIDE_PANEL_MIN_WIDTH = 832;
+
 /** Wraps an angle into [-PI, PI] so damping always takes the short way round. */
 function wrapAngle(angle: number): number {
   return Math.atan2(Math.sin(angle), Math.cos(angle));
@@ -149,6 +166,10 @@ export function CameraRig({
 
   const focus = useRef(new Vector3());
   const desiredFocus = useRef(new Vector3());
+  /** Where the camera actually points: the focus, plus any lateral shift made
+   *  to clear the selection card. Held in a ref so no vector is allocated per
+   *  frame. */
+  const aim = useRef(new Vector3());
   const azimuth = useRef(OVERVIEW_AZIMUTH);
   const distance = useRef(0);
   const elevation = useRef(ELEVATION);
@@ -163,6 +184,9 @@ export function CameraRig({
   // touch devices both stay zero and the rig behaves exactly as before.
   const leanTarget = useRef({ x: 0, y: 0 });
   const lean = useRef({ x: 0, y: 0 });
+  /** Damped so opening and closing the card slides the system across rather
+   *  than jumping it. */
+  const cardShift = useRef(0);
 
   useEffect(() => {
     if (reducedMotion) return;
@@ -303,15 +327,40 @@ export function CameraRig({
     const viewElevation =
       elevation.current + (leanActive ? -lean.current.y * PARALLAX_ELEVATION : 0);
 
+    // Make room for the selection card. Sliding both the eye and the target
+    // along the camera's own right axis translates the view, so the subject
+    // moves left on screen while the framing stays square to the system.
+    // Offsetting only the eye and still looking at the focus would re-centre
+    // the subject and cancel the shift entirely.
+    const wantsShift =
+      selection.kind !== "overview" &&
+      state.size.width >= CARD_SIDE_PANEL_MIN_WIDTH;
+    cardShift.current +=
+      ((wantsShift ? 1 : 0) - cardShift.current) *
+      (reducedMotion ? 1 : 1 - Math.exp(-LAMBDA * delta));
+
+    const halfWidth =
+      Math.tan(MathUtils.degToRad(camera.fov) / 2) * aspect * distance.current;
+    const shift = halfWidth * CARD_SHIFT * cardShift.current;
+    // Right vector of a camera looking at the focus with +Y up.
+    const shiftX = Math.sin(viewAzimuth) * shift;
+    const shiftZ = -Math.cos(viewAzimuth) * shift;
+
+    aim.current.set(
+      focus.current.x + shiftX,
+      focus.current.y,
+      focus.current.z + shiftZ,
+    );
+
     // Elevation is the resting angle for everything except the first approach,
     // which climbs into it.
     const horizontalReach = Math.cos(viewElevation) * distance.current;
     camera.position.set(
-      focus.current.x + Math.cos(viewAzimuth) * horizontalReach,
+      focus.current.x + Math.cos(viewAzimuth) * horizontalReach + shiftX,
       focus.current.y + Math.sin(viewElevation) * distance.current,
-      focus.current.z + Math.sin(viewAzimuth) * horizontalReach,
+      focus.current.z + Math.sin(viewAzimuth) * horizontalReach + shiftZ,
     );
-    camera.lookAt(focus.current);
+    camera.lookAt(aim.current);
   });
 
   return null;

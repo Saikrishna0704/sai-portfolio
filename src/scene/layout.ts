@@ -136,12 +136,13 @@ export interface MoonLayout {
 /**
  * A domain's ring system (PROJECT.md §3 — supporting technologies/methods).
  *
- * `bands` is the domain's `relatedSkills` count, so the rings state a real
- * quantity rather than decorating. A domain with no declared skills gets no
- * rings at all, which is the honest rendering of nothing to support it.
+ * A domain has rings only if it declares supporting technologies, and the disc
+ * reaches further the more it declares. Nothing here is countable by eye: an
+ * earlier version drew one visible band per skill, which counted correctly and
+ * looked like a target, because evenly spaced gaps are the one feature real
+ * ring systems never have.
  */
 export interface RingLayout {
-  bands: number;
   /** Distance from the planet's centre, in world units. */
   inner: number;
   outer: number;
@@ -169,6 +170,11 @@ export interface PlanetLayout {
   orbitAngle: number;
   radius: number;
   color: string;
+  /**
+   * Surface character, 0 rocky to 1 banded. Presentation only — seeded per
+   * domain so the bodies differ, encoding nothing about the work.
+   */
+  character: number;
   /** Null when the domain declares no supporting technologies. */
   rings: RingLayout | null;
   moonOrbitRadius: number;
@@ -282,9 +288,9 @@ export function buildSystem(domains: Domain[]): SystemLayout {
       (moons.length || 1);
     const labelDistance = WORLD.planetRadius + 0.55;
 
-    // One band per supporting technology (PROJECT.md §3). Derived, never
-    // hand-set: adding a skill to a domain widens its rings by one.
-    const bandCount = domain.relatedSkills.length;
+    // Rings exist only where there are supporting technologies to justify
+    // them (PROJECT.md §3), and reach further the more there are.
+    const skillCount = domain.relatedSkills.length;
 
     return {
       domainId: domain.id,
@@ -295,16 +301,24 @@ export function buildSystem(domains: Domain[]): SystemLayout {
       orbitAngle: angle,
       radius: WORLD.planetRadius,
       color: DOMAIN_COLORS[domainIndex % DOMAIN_COLORS.length] ?? FALLBACK_COLOR,
+      // Spread across the rocky-to-banded axis so no two bodies read alike.
+      character: ((domainIndex * 0.37 + 0.15) % 1) * 0.9,
       rings:
-        bandCount > 0
+        skillCount > 0
           ? {
-              bands: bandCount,
               inner: WORLD.planetRadius * RING_INNER_SCALE,
-              outer: WORLD.planetRadius * RING_OUTER_SCALE,
+              // Reaches further the more technologies support the domain,
+              // clamped so a well-supported domain never touches its moons.
+              outer:
+                WORLD.planetRadius *
+                Math.min(
+                  RING_OUTER_SCALE,
+                  RING_INNER_SCALE + 0.28 + skillCount * 0.14,
+                ),
               // One sign, with a stepped spread so no two domains share a
               // tilt and the set does not read as stamped from one template.
               tilt: RING_TILT_BASE + ((domainIndex * 0.052) % RING_TILT_SPREAD),
-              seed: domainIndex * 17 + bandCount,
+              seed: domainIndex * 17 + skillCount,
             }
           : null,
       moonOrbitRadius: ringRadius,
