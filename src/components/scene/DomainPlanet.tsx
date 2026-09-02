@@ -17,6 +17,7 @@ import {
   createGlowTexture,
   type AtmosphereMaterial,
 } from "@/scene/atmosphere";
+import { createRingMaterial, type RingMaterial } from "@/scene/rings";
 import { MOON_COLOR, type PlanetLayout } from "@/scene/layout";
 import {
   moonFanRotation,
@@ -62,6 +63,11 @@ const HAZE_SCALE = 3.1;
 const HAZE_ACTIVE = 0.5;
 const HAZE_RESTING = 0.22;
 const HAZE_DIMMED = 0.05;
+/** Ring brightness per emphasis level. Rings carry the supporting
+ *  technologies, so they lift with the domain that owns them. */
+const RINGS_ACTIVE = 1;
+const RINGS_RESTING = 0.62;
+const RINGS_DIMMED = 0.12;
 /** Damping rate for emphasis changes — quick, but never a switch flip. */
 const EMPHASIS_LAMBDA = 6;
 
@@ -147,6 +153,21 @@ export function DomainPlanet({
   );
   useEffect(() => () => hazeTexture?.dispose(), [hazeTexture]);
 
+  const ringsRef = useRef<Mesh>(null);
+  const ringMaterial = useMemo(() => {
+    const rings = planet.rings;
+    if (!rings) return null;
+    return createRingMaterial(
+      planet.color,
+      rings.bands,
+      rings.inner,
+      rings.outer,
+      rings.seed,
+      RINGS_RESTING,
+    );
+  }, [planet.rings, planet.color]);
+  useEffect(() => () => ringMaterial?.dispose(), [ringMaterial]);
+
   // Each moon gets its own quiet grey surface, seeded per project so it keeps
   // the same face across reloads. Bare spheres read as primitives; the point
   // of the texture is that a moon looks like a place, not a marker.
@@ -205,6 +226,17 @@ export function DomainPlanet({
           ? HAZE_DIMMED
           : HAZE_RESTING;
       hazeMaterial.opacity += (targetHaze - hazeMaterial.opacity) * emphasisT;
+    }
+
+    const ringsMaterial = ringsRef.current?.material;
+    if (ringsMaterial instanceof ShaderMaterial) {
+      const targetRings = isActive
+        ? RINGS_ACTIVE
+        : isDimmed
+          ? RINGS_DIMMED
+          : RINGS_RESTING;
+      const strength = (ringsMaterial as RingMaterial).uniforms.uStrength;
+      strength.value += (targetRings - strength.value) * emphasisT;
     }
 
     if (reducedMotion) return;
@@ -271,6 +303,22 @@ export function DomainPlanet({
       <mesh ref={atmosphereRef} material={atmosphere} scale={ATMOSPHERE_SCALE}>
         <sphereGeometry args={[planet.radius, 32, 32]} />
       </mesh>
+
+      {/* Supporting technologies, as a ring system (PROJECT.md §3). One band
+          per declared skill, tilted off the orbital plane so it reads as an
+          ellipse from the fixed viewing elevation. Drawn before the haze so
+          the haze layers over its inner edge. */}
+      {planet.rings && ringMaterial && (
+        <mesh
+          ref={ringsRef}
+          material={ringMaterial}
+          rotation={[Math.PI / 2 + planet.rings.tilt, 0, 0]}
+        >
+          <ringGeometry
+            args={[planet.rings.inner, planet.rings.outer, 96]}
+          />
+        </mesh>
+      )}
 
       {/* The haze beyond the limb — one soft additive quad, as with the star's
           halo. Opacity is the damped emphasis channel. */}

@@ -92,6 +92,33 @@ const MOON_CLEARANCE = 1.8;
 /** Gap between one planet's moon ring and the next planet's. */
 const RING_GAP = 1.2;
 
+/**
+ * A planet's own ring system, as multiples of the body's radius.
+ *
+ * The outer edge stays well inside `WORLD.moonOrbitRadius` (2.0 against a
+ * planet radius of 0.62, so the rings end around 1.55) — the rings must never
+ * reach the moons, or a project would look like it was orbiting inside the
+ * dust rather than around the domain.
+ */
+const RING_INNER_SCALE = 1.75;
+const RING_OUTER_SCALE = 2.75;
+/**
+ * Tilt off the orbital plane, in radians.
+ *
+ * Always the same sign, and larger than feels necessary. The camera sits at a
+ * fixed 32 degrees, and a ring left near the orbital plane is foreshortened
+ * hard enough that its vertical extent is smaller than the planet's own
+ * radius — so it collapses onto the body and reads as scratches across it
+ * rather than as a system around it. Tilting the far edge up opens the ellipse
+ * until the rings clearly stand off the planet.
+ *
+ * Alternating the sign was worse: it flattened every other domain to an
+ * edge-on line, which is why Inference briefly looked like it had a stick
+ * through it.
+ */
+const RING_TILT_BASE = 0.3;
+const RING_TILT_SPREAD = 0.14;
+
 export interface MoonLayout {
   projectId: string;
   title: string;
@@ -104,6 +131,25 @@ export interface MoonLayout {
    */
   labelOffset: [number, number, number];
   radius: number;
+}
+
+/**
+ * A domain's ring system (PROJECT.md §3 — supporting technologies/methods).
+ *
+ * `bands` is the domain's `relatedSkills` count, so the rings state a real
+ * quantity rather than decorating. A domain with no declared skills gets no
+ * rings at all, which is the honest rendering of nothing to support it.
+ */
+export interface RingLayout {
+  bands: number;
+  /** Distance from the planet's centre, in world units. */
+  inner: number;
+  outer: number;
+  /** Tilt off the orbital plane, radians. Varies per domain so the system
+   *  does not read as a set of identical stacked discs. */
+  tilt: number;
+  /** Seeds the per-band brightness variation. */
+  seed: number;
 }
 
 export interface PlanetLayout {
@@ -123,6 +169,8 @@ export interface PlanetLayout {
   orbitAngle: number;
   radius: number;
   color: string;
+  /** Null when the domain declares no supporting technologies. */
+  rings: RingLayout | null;
   moonOrbitRadius: number;
   /**
    * Radius a camera must frame to show this domain properly: the moon ring
@@ -234,6 +282,10 @@ export function buildSystem(domains: Domain[]): SystemLayout {
       (moons.length || 1);
     const labelDistance = WORLD.planetRadius + 0.55;
 
+    // One band per supporting technology (PROJECT.md §3). Derived, never
+    // hand-set: adding a skill to a domain widens its rings by one.
+    const bandCount = domain.relatedSkills.length;
+
     return {
       domainId: domain.id,
       name: domain.name,
@@ -243,6 +295,18 @@ export function buildSystem(domains: Domain[]): SystemLayout {
       orbitAngle: angle,
       radius: WORLD.planetRadius,
       color: DOMAIN_COLORS[domainIndex % DOMAIN_COLORS.length] ?? FALLBACK_COLOR,
+      rings:
+        bandCount > 0
+          ? {
+              bands: bandCount,
+              inner: WORLD.planetRadius * RING_INNER_SCALE,
+              outer: WORLD.planetRadius * RING_OUTER_SCALE,
+              // One sign, with a stepped spread so no two domains share a
+              // tilt and the set does not read as stamped from one template.
+              tilt: RING_TILT_BASE + ((domainIndex * 0.052) % RING_TILT_SPREAD),
+              seed: domainIndex * 17 + bandCount,
+            }
+          : null,
       moonOrbitRadius: ringRadius,
       focusRadius:
         moonCount > 0

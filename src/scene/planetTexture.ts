@@ -5,11 +5,17 @@ import { mulberry32 } from "./random";
 const WIDTH = 512;
 const HEIGHT = 256;
 
-/** How far mottling strays from the base colour. Low on purpose: PROJECT.md §8
- *  asks for restraint, and the surface should read as a body, not a pattern. */
-const MOTTLE_STRENGTH = 0.38;
-const BAND_STRENGTH = 0.16;
-const BLOB_COUNT = 46;
+/**
+ * How far mottling strays from the base colour.
+ *
+ * Restrained, per PROJECT.md §8, but not flat: at 0.38 the bodies read as
+ * smooth balls once the camera comes near, and surface character is most of
+ * what separates a planet from a primitive. Raised until the terminator has
+ * something to travel across, and no further.
+ */
+const MOTTLE_STRENGTH = 0.52;
+const BAND_STRENGTH = 0.24;
+const BLOB_COUNT = 62;
 
 function shade(base: Color, amount: number): string {
   const next = base.clone();
