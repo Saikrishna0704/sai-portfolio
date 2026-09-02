@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, Inter } from "next/font/google";
+import { IBM_Plex_Mono, Inter, Spectral } from "next/font/google";
 
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { OpeningSequence } from "@/components/opening/OpeningSequence";
@@ -21,6 +21,23 @@ const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
   variable: "--font-mono",
+  display: "swap",
+});
+
+/**
+ * The Dossier's face, and only the Dossier's.
+ *
+ * The word means a physical file, and that view is now built as one: paper
+ * laid over the void. A serif is what makes a screen read as a printed
+ * document rather than as an interface, and the italic carries the archival
+ * asides. Nowhere else on the site uses it, so it loads for the one route
+ * whose identity depends on it.
+ */
+const spectral = Spectral({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-serif",
   display: "swap",
 });
 
@@ -63,7 +80,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${plexMono.variable}`}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${plexMono.variable} ${spectral.variable}`}
+    >
       <body>
         <a className="skip-link" href="#main">
           Skip to content

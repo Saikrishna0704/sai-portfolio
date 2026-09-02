@@ -1,20 +1,26 @@
 /* The Dossier — the conventional HTML view, first-class rather than a fallback
    (PROJECT.md §7).
 
-   The old layout pinned the text into a 42rem column on the left and cleared a
-   gradient to the right so the system stayed visible. It kept the scene, but it
-   read as a narrow document abandoned at one edge of a wide screen.
+   The word means a physical file, and this is built as one: a sheet of paper
+   laid over the void, with the star system still visible around its edges. Two
+   earlier attempts were worse. Pinning the text into a column on the left and
+   clearing a gradient to the right read as a document abandoned at one edge of
+   a wide screen. Making every surface translucent over a near-opaque scrim
+   kept the scene but wasted it — 87 percent dim left a static grey wash, and a
+   WebGL context was being paid for to draw almost nothing.
 
-   This version takes the full width and keeps the scene by making the surfaces
-   themselves translucent instead: a flat dim over the whole viewport, with
-   panels sitting on it at around three quarters opacity, so the star system is
-   a faint field behind and between the nodes rather than a strip beside them. */
+   Paper solves both. The sheet is opaque, so text has a real ground and the
+   reading is never fighting a starfield. The scrim behind it is light enough
+   that the system reads around the margins, which is what makes the page feel
+   placed in the world rather than pasted over it. */
 .page::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: rgba(4, 6, 11, 0.87);
+  /* Much lighter than the 0.87 this replaces: the sheet now carries the
+     legibility, so the scrim only has to settle the scene down. */
+  background: rgba(4, 6, 11, 0.55);
   /* Still seals the scene off from the pointer. The Dossier is a reading
      surface, and the domain navigation that would make a selection meaningful
      only exists on the Explore view. */
@@ -22,15 +28,102 @@
 }
 
 .page {
+  /* ---- Paper palette, scoped to this view ----
+     The same token names the rest of the site uses, redefined here so every
+     rule that already says var(--text) or var(--line) becomes ink-on-paper
+     without being rewritten. Only the handful of hard-coded rgba surfaces
+     below need explicit overrides. */
+  --paper: #f2ebdc;
+  --paper-sunk: #eae1cd;
+  --paper-raised: #f7f2e6;
+  --text: #2b2620;
+  --text-muted: #5f574b;
+  /* Both of these are measured against --paper-sunk, the darkest stock any
+     text sits on, so they hold on every surface here rather than only on the
+     lightest one. The obvious warmer values for each (#857a68, #96690b) came
+     in at 3.2 and 3.7 — the same WCAG AA failure the dark theme already had
+     to fix once. Darkened until they pass. */
+  --text-faint: #6d6253;
+  /* Warm gold, from the reference. 4.9:1 on the sunk stock, so it can carry
+     links, which it does — project titles and institutions are all accent. */
+  --accent: #7f5808;
+  --accent-soft: rgba(180, 133, 30, 0.14);
+  /* Used by the chain dot, which sits on the sheet rather than the void. */
+  --deep: var(--paper);
+
+  /* Anchors the tape, which straddles the sheet's top edge. */
+  position: relative;
   flex: 1;
   display: grid;
   grid-template-columns: 1fr;
   gap: 0;
   width: 100%;
   max-width: 78rem;
-  margin: 0 auto;
-  padding: 3rem var(--gutter) 6rem;
+  /* Void showing above and below is what makes this read as a sheet placed on
+     the scene rather than as the page background. */
+  margin: 2rem auto 4rem;
+  padding: 3rem var(--gutter) 5rem;
   pointer-events: auto;
+
+  color: var(--text);
+  background-color: var(--paper);
+  /* Dot grid, as in the reference: enough tooth that the surface reads as
+     paper stock rather than as a flat fill, faint enough never to compete
+     with text sitting on it. */
+  background-image: radial-gradient(
+    rgba(62, 52, 38, 0.11) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+  border-radius: 2px;
+  /* Lifted off the void. A long soft shadow plus a warm top edge, so the
+     sheet has thickness and catches light from above. */
+  box-shadow:
+    0 2px 0 0 rgba(255, 252, 244, 0.5) inset,
+    0 30px 80px -40px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(62, 52, 38, 0.14);
+}
+
+/* A strip of tape holding the sheet to the void, straddling its top edge so it
+   reads as fixing the paper down rather than lying on it. Decorative and inert:
+   a pseudo-element, so it is not in the accessibility tree and carries nothing
+   a reader would miss. */
+.page::after {
+  content: "";
+  position: absolute;
+  top: -0.8rem;
+  left: 3.5rem;
+  width: 9rem;
+  height: 1.9rem;
+  transform: rotate(-3.5deg);
+  background: linear-gradient(
+    100deg,
+    rgba(214, 176, 76, 0.38),
+    rgba(232, 200, 116, 0.28)
+  );
+  box-shadow: 0 1px 3px rgba(62, 46, 20, 0.18);
+  pointer-events: none;
+}
+
+@media (min-width: 60rem) {
+  .page {
+    margin: 3rem auto 5rem;
+    padding: 3.5rem 3rem 5rem;
+  }
+}
+
+/* Below this the sheet metaphor costs more than it gives: margins eat the
+   measure, so it runs edge to edge and only the rounded corners go. */
+@media (max-width: 40rem) {
+  .page {
+    margin: 0;
+    border-radius: 0;
+  }
+
+  /* Nothing to tape down once the sheet runs edge to edge. */
+  .page::after {
+    display: none;
+  }
 }
 
 @media (min-width: 64rem) {
@@ -84,7 +177,7 @@
   border-radius: 50%;
   background: var(--text-faint);
   margin-left: -1.15rem;
-  box-shadow: 0 0 0 4px rgba(4, 6, 11, 0.9);
+  box-shadow: 0 0 0 4px var(--paper);
   transition:
     background-color 180ms var(--ease-out),
     box-shadow 180ms var(--ease-out),
@@ -103,8 +196,8 @@
   background: var(--accent);
   transform: scale(1.5);
   box-shadow:
-    0 0 0 4px rgba(4, 6, 11, 0.9),
-    0 0 12px 2px rgba(185, 212, 255, 0.35);
+    0 0 0 4px var(--paper),
+    0 0 10px 2px rgba(180, 133, 30, 0.35);
 }
 
 /* A selected skill lights every node it reaches. */
@@ -133,24 +226,32 @@
   }
 }
 
+/* The cover of the file. Rules above and below the name turn it from a page
+   heading into a title block, which is how a printed record announces itself. */
 .masthead {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 1rem;
+  gap: 0.5rem;
+  margin-bottom: 2.25rem;
+  padding-bottom: 1.4rem;
+  border-bottom: 1px solid var(--line-strong);
 }
 
 .kicker {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 0.6875rem;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--text-faint);
 }
 
 .name {
-  font-size: clamp(1.9rem, 4.5vw, 2.6rem);
-  line-height: 1.05;
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(2.4rem, 6vw, 3.9rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
   text-wrap: balance;
 }
 
@@ -172,9 +273,9 @@
   padding: 1.6rem 1.5rem 1.75rem;
   border: 1px solid var(--line);
   border-radius: 3px;
-  /* Translucent so the system shows through, opaque enough that body text
-     never sits on a moving starfield. */
-  background: rgba(9, 13, 22, 0.76);
+  /* A leaf on the sheet: very slightly lighter than the paper it sits on, so
+     the section reads as a separate piece of stock without becoming a box. */
+  background: var(--paper-raised);
   /* Reveal state. Wrapped until reached, unwrapped once it is. */
   opacity: 0;
   transform: translateY(22px);
@@ -239,14 +340,13 @@
   top: 1.85rem;
 }
 
-/* Lifts off the page. Kept to a few pixels and a hairline change: PROJECT.md
-   §8 asks for restrained highlights, and a big shadow on a dark ground reads
-   as murk rather than elevation. */
+/* Lifts off the sheet. A soft warm shadow rather than the near-black one this
+   replaces, which on paper read as dirt rather than as elevation. */
 .panel:hover {
   border-color: var(--line-strong);
   box-shadow:
-    0 18px 44px -28px rgba(0, 0, 0, 0.95),
-    inset 0 1px 0 0 rgba(214, 226, 245, 0.04);
+    0 14px 30px -20px rgba(62, 46, 20, 0.4),
+    inset 0 1px 0 0 rgba(255, 253, 246, 0.7);
 }
 
 .panelOpen:hover {
@@ -257,7 +357,7 @@
 .panelLit::after {
   background: var(--accent);
   border-color: var(--accent);
-  box-shadow: 0 0 12px 2px rgba(185, 212, 255, 0.35);
+  box-shadow: 0 0 10px 2px rgba(180, 133, 30, 0.4);
 }
 
 .panelLit::before {
@@ -299,10 +399,13 @@
   color: var(--text-faint);
 }
 
+/* An archival aside: italic, the way a hand-annotated file marks a note
+   distinct from the record it sits beside. */
 .note {
-  font-size: 0.8125rem;
-  color: var(--text-faint);
-  max-width: 42rem;
+  font-style: italic;
+  font-size: 0.9375rem;
+  color: var(--text-muted);
+  max-width: 40rem;
 }
 
 .panelBody {
@@ -311,11 +414,36 @@
   gap: 1rem;
 }
 
+/* ---------- The document voice ----------
+   Prose is set in the serif; labels, dates and indices stay in the mono they
+   were already in. That split is what makes the page read as a printed record
+   with a typed catalogue system rather than as a themed website. */
+
 .bio {
-  font-size: 1.125rem;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.3125rem;
   line-height: 1.6;
-  color: var(--text-muted);
-  max-width: 42rem;
+  color: var(--text);
+  max-width: 40rem;
+}
+
+/* A leading capital, the way a printed file opens its first paragraph. */
+.bio::first-letter {
+  float: left;
+  font-size: 3.4em;
+  line-height: 0.82;
+  padding: 0.06em 0.08em 0 0;
+  color: var(--accent);
+}
+
+/* Set here rather than on each rule below, since those already own their size
+   and colour and would win on source order. */
+.cardSummary,
+.subSummary,
+.highlights,
+.note,
+.cardTitle {
+  font-family: var(--font-serif), Georgia, serif;
 }
 
 /* ---------- Decks: sub-items that fan open ---------- */
@@ -333,7 +461,9 @@
   padding: 1.1rem 1.15rem;
   border: 1px solid var(--line);
   border-radius: 3px;
-  background: rgba(13, 19, 30, 0.6);
+  /* Sunk rather than raised: a card is an item filed *into* the section, so
+     it reads as recessed into the leaf above it. */
+  background: var(--paper-sunk);
   /* Stacked and tilted until the panel is reached, then dealt out in order.
      The offset is negative so the deck reads as collapsed upward into itself
      rather than sliding in from below like everything else on the web. */
@@ -358,11 +488,13 @@
 
 .card:hover {
   border-color: var(--line-strong);
-  background: rgba(16, 23, 36, 0.72);
+  background: #efe7d4;
 }
 
+/* Archived work: flatter stock, no lift. Present, deliberately not competing. */
 .quietCard {
-  background: rgba(9, 13, 22, 0.45);
+  background: transparent;
+  border-style: dashed;
 }
 
 .domainCard {
@@ -378,7 +510,9 @@
 }
 
 .cardTitle {
-  font-size: 1.0625rem;
+  font-size: 1.1875rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
 }
 
 .cardMeta {
@@ -396,7 +530,7 @@
 }
 
 .cardSummary {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   line-height: 1.6;
   color: var(--text-muted);
 }
@@ -464,7 +598,7 @@
 
 .subCard:hover {
   border-color: var(--line);
-  background: rgba(20, 28, 43, 0.55);
+  background: var(--paper-raised);
   transform: translateY(-2px);
 }
 
