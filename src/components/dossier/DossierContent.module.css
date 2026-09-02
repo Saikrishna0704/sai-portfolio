@@ -13,11 +13,15 @@
    reading is never fighting a starfield. The scrim behind it is light enough
    that the system reads around the margins, which is what makes the page feel
    placed in the world rather than pasted over it. */
-.page::before {
-  content: "";
+/* Its own element rather than .page::before.
+   The sheet uses backdrop-filter, which makes .page a stacking context — and
+   inside one, a child at z-index -1 paints above the parent's background
+   instead of escaping behind it. As a pseudo-element the scrim ended up
+   washing 55% black over the cream and turned the whole sheet grey. A sibling
+   painted earlier in DOM order has no such problem. */
+.scrim {
   position: fixed;
   inset: 0;
-  z-index: -1;
   /* Much lighter than the 0.87 this replaces: the sheet now carries the
      legibility, so the scrim only has to settle the scene down. */
   background: rgba(4, 6, 11, 0.55);
@@ -43,7 +47,7 @@
      lightest one. The obvious warmer values for each (#857a68, #96690b) came
      in at 3.2 and 3.7 — the same WCAG AA failure the dark theme already had
      to fix once. Darkened until they pass. */
-  --text-faint: #6d6253;
+  --text-faint: #665c4e;
   /* Warm gold, from the reference. 4.9:1 on the sunk stock, so it can carry
      links, which it does — project titles and institutions are all accent. */
   --accent: #7f5808;
@@ -66,7 +70,13 @@
   pointer-events: auto;
 
   color: var(--text);
-  background-color: var(--paper);
+  /* Not quite opaque, over a blur — the same reason the selection card is.
+     A solid sheet on near-black space reads as pasted on rather than lying
+     in the scene; letting a few percent of the field through, softened, is
+     what makes the two look like one picture. Held higher than the card's
+     because this surface carries long-form reading. */
+  background-color: color-mix(in srgb, var(--paper) 95%, transparent);
+  backdrop-filter: blur(10px) saturate(0.85);
   /* Dot grid, as in the reference: enough tooth that the surface reads as
      paper stock rather than as a flat fill, faint enough never to compete
      with text sitting on it. */
@@ -76,10 +86,12 @@
   );
   background-size: 22px 22px;
   border-radius: 2px;
-  /* Lifted off the void. A long soft shadow plus a warm top edge, so the
-     sheet has thickness and catches light from above. */
+  /* Lifted off the void, and spilling light into it. The warm outer glow is
+     what stops the sheet ending at a hard cut: a lit surface in a dark room
+     throws light past its own edges. */
   box-shadow:
     0 2px 0 0 rgba(255, 252, 244, 0.5) inset,
+    0 0 120px 6px rgba(226, 188, 108, 0.16),
     0 30px 80px -40px rgba(0, 0, 0, 0.9),
     0 0 0 1px rgba(62, 52, 38, 0.14);
 }

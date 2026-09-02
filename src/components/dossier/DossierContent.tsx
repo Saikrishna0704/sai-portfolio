@@ -338,7 +338,12 @@ export function DossierContent() {
   };
 
   return (
-    <div className={styles.page}>
+    <>
+      {/* Settles the scene down behind the sheet. A sibling rather than a
+          pseudo-element of .page — see the note in the stylesheet. */}
+      <div className={styles.scrim} aria-hidden="true" />
+
+      <div className={styles.page}>
       {/* The wrapped state is the CSS default so there is no flash of content
           being hidden on load, which means without JavaScript nothing would
           ever unwrap and this page would be blank. It is the view that has to
@@ -636,8 +641,9 @@ export function DossierContent() {
             </ul>
           </Panel>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

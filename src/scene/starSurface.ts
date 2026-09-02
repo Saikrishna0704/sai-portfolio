@@ -94,8 +94,15 @@ const fragmentShader = /* glsl */ `
     float granulation = cells * 0.72 + grain * 0.28;
 
     // Limb darkening: brightness falls as the surface turns away.
+    //
+    // Floored well above zero. A bare pow() reaches exactly 0 at the
+    // silhouette, which drove the colour all the way back to the ember shade
+    // and drew a hard dark ring around the disc where the sphere met its own
+    // halo. A real limb is dimmer than the centre, not black — roughly a
+    // third of centre brightness in visible light — and that floor is what
+    // lets the body blend into the glow around it.
     float facing = clamp(dot(normalize(vNormal), normalize(vViewDir)), 0.0, 1.0);
-    float limb = pow(facing, 0.62);
+    float limb = 0.34 + 0.66 * pow(facing, 0.55);
 
     // The surface brightens toward the centre and mottles everywhere. The
     // granulation term is small: visible texture, not camouflage.
