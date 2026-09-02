@@ -21,6 +21,45 @@
   opacity: 0.45;
 }
 
+/* ---------- The affordance ----------
+   A label that selects its body is drawn as a target, not a caption. Nothing
+   else in this scene tells a first-time visitor that the spheres respond:
+   they arrive, see a picture, and leave. A bordered chip is recognised as a
+   control instantly, and it is a far larger target than the body it names. */
+.interactive {
+  cursor: pointer;
+  padding: 0.32rem 0.72rem;
+  border: 1px solid rgba(214, 226, 245, 0.28);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--void) 62%, transparent);
+  backdrop-filter: blur(6px);
+  transition:
+    border-color 180ms var(--ease-out),
+    background-color 180ms var(--ease-out),
+    color 180ms var(--ease-out);
+}
+
+.interactive:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--void) 78%, transparent);
+  color: var(--accent);
+}
+
+/* The body currently in focus. Reads as the pressed state of the chip, so the
+   scene and the card on the right always agree about where you are. */
+.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, rgba(4, 6, 11, 0.72));
+  color: var(--text);
+}
+
+/* Project chips sit closer together than domain chips, so they carry less
+   padding and a quieter border. */
+.project.interactive {
+  padding: 0.26rem 0.6rem;
+  border-color: rgba(214, 226, 245, 0.18);
+}
+
 .project {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 0.6875rem;

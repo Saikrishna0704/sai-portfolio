@@ -389,6 +389,11 @@ export function DomainPlanet({
 
       <BodyLabel
         text={planet.name}
+        active={isActive}
+        onSelect={() => onSelect({ kind: "domain", domainId: planet.domainId })}
+        onHover={(hovering) =>
+          onHover(hovering ? { domainId: planet.domainId } : null)
+        }
         position={planet.labelOffset}
         variant="domain"
         dimmed={isDimmed}
@@ -462,6 +467,24 @@ export function DomainPlanet({
                   position={moon.labelOffset}
                   variant="project"
                   dimmed={false}
+                  active={isSelectedProject}
+                  onSelect={() =>
+                    onSelect({
+                      kind: "project",
+                      domainId: planet.domainId,
+                      projectId: moon.projectId,
+                    })
+                  }
+                  onHover={(hovering) =>
+                    onHover(
+                      hovering
+                        ? {
+                            domainId: planet.domainId,
+                            projectId: moon.projectId,
+                          }
+                        : null,
+                    )
+                  }
                 />
               )}
             </group>

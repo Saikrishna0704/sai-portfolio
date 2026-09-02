@@ -39,10 +39,57 @@
   text-shadow: 0 1px 12px rgba(4, 6, 11, 0.85);
 }
 
+/* The call to action. Sized and coloured to be read on arrival — the previous
+   version was 11px in --text-faint and was reliably missed, which left people
+   with no idea the scene was interactive at all. */
 .hint {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.35rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* A slow beacon. One moving thing among static text is what the eye lands on,
+   and it marks this line as the live instruction rather than more prose. */
+.pulse {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 var(--accent-soft);
+  animation: beacon 2.4s var(--ease-out) infinite;
+}
+
+@keyframes beacon {
+  0% {
+    box-shadow: 0 0 0 0 rgba(185, 212, 255, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 9px rgba(185, 212, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(185, 212, 255, 0);
+  }
+}
+
+/* Motion is an accent here, never the carrier: the words say the same thing
+   with the beacon held still. */
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    animation: none;
+  }
+}
+
+.aside {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 0.6875rem;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--text-faint);
 }
 

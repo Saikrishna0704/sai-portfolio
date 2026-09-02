@@ -37,16 +37,24 @@ export function IdentityIntro() {
     >
       <p className={styles.tagline}>{person.tagline}</p>
       <p className={styles.bio}>{person.bio}</p>
+      {/* The one instruction the view needs. It used to sit here as fine
+          print and went unread, so people arrived, saw a picture, and never
+          discovered the system responds. Now it reads as a prompt: accent
+          coloured, with a pulse marking it as the live thing on the page. */}
       <p className={styles.hint}>
-        Select a planet to explore the work, or read the{" "}
+        <span className={styles.pulse} aria-hidden="true" />
+        Pick a planet to explore the work
+      </p>
+      <p className={styles.aside}>
+        or read the{" "}
         <Link
           href="/dossier"
           className={styles.hintLink}
           tabIndex={shown ? undefined : -1}
         >
           Dossier
-        </Link>
-        .
+        </Link>{" "}
+        for the whole record.
       </p>
     </div>
   );
